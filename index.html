@@ -3,18 +3,15 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>PassCard Metal</title>
+<title>PassCard Metal V4</title>
 <style>
-    /* --- 1. スマホ・レイアウト崩れ防止の基礎設定 --- */
+    /* --- 基本設定 --- */
     body {
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
         background-color: #121212; /* Deep Black */
         color: #e0e0e0;
-        margin: 0;
-        padding: 20px 10px;
-        box-sizing: border-box; /* パディングを含めた幅計算 */
-        overflow-x: hidden; /* 横スクロール防止 */
-        padding-bottom: 80px;
+        margin: 0; padding: 20px 10px;
+        box-sizing: border-box; overflow-x: hidden; padding-bottom: 80px;
     }
 
     h2, h3 { margin: 0; font-weight: 700; letter-spacing: 0.05em; }
@@ -22,14 +19,27 @@
     /* --- コンテナ --- */
     .container { max-width: 500px; margin: 0 auto; width: 100%; }
 
-    /* --- メタルカードデザイン --- */
+    /* --- タブデザイン --- */
+    .tab-container {
+        display: flex; gap: 10px; margin-bottom: 20px;
+        background: #222; padding: 5px; border-radius: 12px;
+        border: 1px solid #444;
+    }
+    .tab-btn {
+        flex: 1; padding: 12px; border: none; background: transparent;
+        color: #888; font-weight: bold; border-radius: 8px;
+        cursor: pointer; transition: 0.3s; font-size: 0.9em;
+    }
+    .tab-btn.active {
+        background: #007bff; color: white;
+        box-shadow: 0 4px 10px rgba(0,123,255,0.4);
+    }
+
+    /* --- メタルカード --- */
     .card {
         background: linear-gradient(135deg, #3a3a3a, #222);
-        border: 1px solid #555;
-        border-top: 1px solid #777;
-        border-radius: 16px;
-        padding: 20px;
-        margin-bottom: 25px;
+        border: 1px solid #555; border-top: 1px solid #777;
+        border-radius: 16px; padding: 20px; margin-bottom: 25px;
         box-shadow: 0 10px 20px rgba(0,0,0,0.5);
     }
 
@@ -47,9 +57,7 @@
         background: #f0f0f0; color: #111;
         border: 2px solid #ccc; border-radius: 6px;
         font-size: 1em; font-weight: 500;
-        box-sizing: border-box; /* はみ出し防止 */
-        outline: none;
-        appearance: none; /* iOSのデフォルトスタイル解除 */
+        box-sizing: border-box; outline: none; appearance: none;
     }
     input:focus { border-color: #007bff; background: #fff; }
 
@@ -64,13 +72,11 @@
 
     /* --- ボタン類 --- */
     button {
-        cursor: pointer; padding: 15px;
-        border: none; border-radius: 8px;
+        cursor: pointer; padding: 15px; border: none; border-radius: 8px;
         font-weight: bold; font-size: 1em; width: 100%;
         margin-bottom: 12px; color: white;
         text-transform: uppercase; letter-spacing: 1px;
-        box-shadow: 0 4px 6px rgba(0,0,0,0.3);
-        transition: transform 0.1s;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.3); transition: transform 0.1s;
     }
     button:active { transform: scale(0.97); }
 
@@ -90,6 +96,7 @@
         position: relative; box-shadow: 0 4px 8px rgba(0,0,0,0.3);
     }
     .item-card.pinned { border-left-color: #ffc107; background: #2b2b24; }
+    .item-card.others { border-left-color: #6f42c1; } /* Othersは紫 */
 
     .item-header { display: flex; align-items: center; margin-bottom: 12px; justify-content: space-between; }
     .logo-circle {
@@ -113,20 +120,25 @@
         position: fixed; top: 0; left: 0; width: 100%; height: 100%;
         background: #121212; z-index: 9000;
         display: flex; flex-direction: column; justify-content: center; align-items: center;
-        padding: 20px; box-sizing: border-box;
+        padding: 20px; box-sizing: border-box; overflow-y: auto;
     }
     .lock-input {
-        text-align:center; letter-spacing: 5px; margin-bottom: 20px; 
+        text-align:center; letter-spacing: 2px; margin-bottom: 15px; 
         background:#333 !important; color:white !important; border:none !important;
     }
+    .lock-msg {
+        color: #aaa; font-size: 0.9em; margin-bottom: 20px; line-height: 1.6; text-align: left;
+        background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px; border-left: 3px solid #d9534f;
+    }
+    .rule-list {
+        font-size: 0.8em; color: #888; text-align: left; margin-bottom: 20px; padding-left: 20px;
+    }
 
-    /* --- カスタムモーダル（Metal仕様） --- */
+    /* --- モーダル --- */
     #custom-modal-overlay {
-        display: none;
-        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
         background: rgba(0,0,0,0.8); z-index: 10000;
-        justify-content: center; align-items: center;
-        backdrop-filter: blur(5px);
+        justify-content: center; align-items: center; backdrop-filter: blur(5px);
     }
     #custom-modal {
         background: #252525; padding: 25px; width: 85%; max-width: 400px;
@@ -148,10 +160,10 @@
     }
     #toast.show { visibility: visible; opacity: 1; }
 
-    /* 印刷設定 */
+    /* 印刷 */
     @media print {
         body { background: white; color: black; padding: 0; }
-        .card, .btn-gen, .btn-save, .action-buttons, .pin-icon, .btn-del, header, .options, #toast, .no-print { display: none !important; }
+        .card, .btn-gen, .btn-save, .action-buttons, .pin-icon, .btn-del, header, .options, #toast, .no-print, .tab-container { display: none !important; }
         .item-card { border: 1px solid #ccc; background: white; color: black; box-shadow: none; break-inside: avoid; margin-bottom: 10px; }
         .data-row { background: #eee; border: 1px solid #ddd; color: black; }
         .logo-circle { background: #333; color: white !important; -webkit-print-color-adjust: exact; }
@@ -166,30 +178,38 @@
 <div id="custom-modal-overlay">
     <div id="custom-modal">
         <div id="modal-msg">MESSAGE</div>
-        <div class="modal-btn-row" id="modal-btns">
-            </div>
+        <div class="modal-btn-row" id="modal-btns"></div>
     </div>
 </div>
 
 <div id="toast">Copied to clipboard</div>
 
 <div id="lock-screen">
-    <div style="text-align:center; width: 100%; max-width: 320px;">
+    <div style="text-align:center; width: 100%; max-width: 350px;">
         <h2 style="color:#fff; font-size:2em; margin-bottom:10px;">PassCard</h2>
-        <p style="color:#777; margin-bottom: 30px;">Metal Edition</p>
+        <p style="color:#777; margin-bottom: 20px;">Metal Edition V4</p>
         
         <div id="setup-mode" style="display:none;">
-            <p style="color:#aaa; font-size:0.9em; margin-bottom:10px;">Create Master Password</p>
-            <input type="password" id="new-master-pass" placeholder="Password" class="lock-input">
-            <button onclick="setMasterPass()" style="background:#007bff;">START</button>
+            <h3 style="color:#007bff; margin-bottom:15px; border-bottom:1px solid #333; padding-bottom:10px;">マスターパスワード設定</h3>
+            <div class="lock-msg">
+                ⚠️ <strong>このパスワードは保存されません。</strong><br>
+                紛失すると、データは全てリセット（消去）されます。<br>
+                必ずご自身でメモを取り、保管してください。
+            </div>
+            <ul class="rule-list">
+                <li>文字数：8文字以上、16文字以内</li>
+                <li>条件：大文字、小文字、数字、記号を各1文字以上</li>
+            </ul>
+            <input type="password" id="new-master-pass" placeholder="パスワードを入力" class="lock-input">
+            <button onclick="setMasterPass()" style="background:#007bff;">設定して開始</button>
         </div>
 
         <div id="unlock-mode" style="display:none;">
+            <p style="color:#aaa; font-size:0.9em;">マスターパスワードを入力</p>
             <input type="password" id="input-master-pass" placeholder="Password" class="lock-input">
             <button onclick="unlockApp()" style="background:#444;">UNLOCK</button>
-            
             <p style="margin-top:40px; color:#d9534f; font-size:0.8em; text-decoration:underline; cursor:pointer;" onclick="resetApp()">
-                Forgot Password?<br>(Reset All Data)
+                パスワードを忘れましたか？<br>(全データを削除してリセット)
             </p>
         </div>
     </div>
@@ -197,20 +217,27 @@
 
 <div id="app-screen" class="container" style="display:none;">
     
+    <div class="tab-container">
+        <button class="tab-btn active" id="tab-web" onclick="switchTab('web')">Websites</button>
+        <button class="tab-btn" id="tab-app" onclick="switchTab('app')">Apps</button>
+        <button class="tab-btn" id="tab-other" onclick="switchTab('other')">Others</button>
+    </div>
+
     <div class="card">
-        <h3>NEW CARD <span style="font-size:0.6em; color:#777; font-weight:normal;">新規作成</span></h3>
+        <h3>NEW ENTRY <span style="font-size:0.6em; color:#777; font-weight:normal;" id="entry-subtitle">新規登録</span></h3>
         <div style="margin-top:15px;"></div>
         
         <div class="input-group">
-            <label>SERVICE NAME <span class="en">サービス名</span></label>
+            <label id="lbl-name">SERVICE NAME <span class="en">サービス名</span></label>
             <input type="text" id="service-name" placeholder="例: Amazon, Google...">
         </div>
         <div class="input-group">
-            <label>ID / USERNAME <span class="en">ID / ユーザー名</span></label>
-            <input type="text" id="service-id" placeholder="例: email@example.com">
+            <label id="lbl-id">ID / USERNAME <span class="en">ID / ユーザー名</span></label>
+            <input type="text" id="service-id" list="id-history" placeholder="タップで履歴表示">
+            <datalist id="id-history"></datalist>
         </div>
 
-        <label>OPTIONS <span class="en">生成設定</span></label>
+        <label>OPTIONS <span class="en">生成設定 (手入力も可)</span></label>
         <div class="options">
             <label><input type="checkbox" id="use-upper" checked> ABC</label>
             <label><input type="checkbox" id="use-lower" checked> abc</label>
@@ -229,15 +256,15 @@
             <input type="text" id="generated-pass" placeholder="Generated Password" style="text-align:center; letter-spacing:1px; background:#fff; font-size:1.2em;">
         </div>
 
-        <button onclick="saveData()" class="btn-save">ADD TO WALLET</button>
+        <button onclick="saveData()" class="btn-save">ADD TO LIST</button>
     </div>
 
     <h3 style="margin-bottom:15px; display:flex; justify-content:space-between; align-items:center;">
-        MY WALLET
+        <span id="list-title">MY WALLET</span>
         <span id="count-badge" style="background:#444; font-size:0.6em; padding:2px 8px; border-radius:10px;">0</span>
     </h3>
 
-    <div class="action-buttons">
+    <div class="action-buttons" id="action-btns">
         <button onclick="shareData()" class="btn-sub"><span style="font-size:1.2em">📤</span> Export</button>
         <button onclick="window.print()" class="btn-sub"><span style="font-size:1.2em">🖨️</span> Print / PDF</button>
     </div>
@@ -246,47 +273,146 @@
 </div>
 
 <script>
-    /* --- 1. モーダル機能 (URL非表示対応) --- */
-    function showModal(msg, isConfirm = false, yesCallback = null) {
-        const overlay = document.getElementById('custom-modal-overlay');
-        const msgDiv = document.getElementById('modal-msg');
-        const btnsDiv = document.getElementById('modal-btns');
+    /* --- 1. グローバル変数 & 初期化 --- */
+    const MASTER_KEY = 'passCard_MasterKey'; 
+    const DATA_KEY = 'passCardData_v3';      
+    let currentTab = 'web'; // web, app, other
 
-        msgDiv.innerHTML = msg.replace(/\n/g, '<br>');
-        btnsDiv.innerHTML = "";
+    window.onload = function() {
+        checkFirstRun();
+        updateIdList();
+    };
 
-        if (isConfirm) {
-            // Confirmタイプ (Yes/No)
-            const btnYes = document.createElement('button');
-            btnYes.className = 'btn-modal btn-modal-ok';
-            btnYes.innerText = 'YES';
-            btnYes.onclick = function() { overlay.style.display = 'none'; if(yesCallback) yesCallback(); };
-            
-            const btnNo = document.createElement('button');
-            btnNo.className = 'btn-modal btn-modal-cancel';
-            btnNo.innerText = 'NO';
-            btnNo.onclick = function() { overlay.style.display = 'none'; };
+    /* --- 2. タブ切り替え --- */
+    function switchTab(tab) {
+        currentTab = tab;
+        
+        // ボタンの見た目変更
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById('tab-' + tab).classList.add('active');
 
-            btnsDiv.appendChild(btnNo);
-            btnsDiv.appendChild(btnYes);
+        // プレースホルダーとラベルの変更
+        const nameInput = document.getElementById('service-name');
+        const idInput = document.getElementById('service-id');
+        const actionBtns = document.getElementById('action-btns');
+
+        if (tab === 'web') {
+            document.getElementById('lbl-name').innerHTML = 'SERVICE NAME <span class="en">Webサイト名</span>';
+            nameInput.placeholder = "例: Amazon, Google...";
+            document.getElementById('lbl-id').innerHTML = 'ID / EMAIL <span class="en">ID / メール</span>';
+            idInput.placeholder = "email@example.com";
+            actionBtns.style.display = "grid"; // 印刷ボタン表示
+        } else if (tab === 'app') {
+            document.getElementById('lbl-name').innerHTML = 'APP NAME <span class="en">アプリ名</span>';
+            nameInput.placeholder = "例: LINE, Instagram...";
+            document.getElementById('lbl-id').innerHTML = 'ID / USERNAME <span class="en">ユーザー名</span>';
+            idInput.placeholder = "User ID";
+            actionBtns.style.display = "grid"; // 印刷ボタン表示
         } else {
-            // Alertタイプ (OKのみ)
-            const btnOk = document.createElement('button');
-            btnOk.className = 'btn-modal btn-modal-ok';
-            btnOk.innerText = 'OK';
-            btnOk.onclick = function() { overlay.style.display = 'none'; };
-            btnsDiv.appendChild(btnOk);
+            // Others
+            document.getElementById('lbl-name').innerHTML = 'DEVICE / ITEM <span class="en">機器名 / 項目</span>';
+            nameInput.placeholder = "例: 自宅Wi-Fi, ルーター, 社内PC...";
+            document.getElementById('lbl-id').innerHTML = 'ID / SSID <span class="en">ID / SSID</span>';
+            idInput.placeholder = "SSID / Login ID";
+            actionBtns.style.display = "none"; // 印刷ボタン非表示
         }
-        overlay.style.display = 'flex';
+
+        renderList(); // リストを再描画してフィルタリング
     }
 
+    /* --- 3. データ保存 --- */
+    function saveData() {
+        const service = document.getElementById('service-name').value;
+        const id = document.getElementById('service-id').value;
+        const pass = document.getElementById('generated-pass').value;
+        
+        if (!service || !pass) { showModal("Name and Password required."); return; }
 
-    /* --- 2. ロック & セットアップ機能 --- */
-    const MASTER_KEY = 'passCard_MasterKey'; // パスワード保存用
-    const DATA_KEY = 'passCardData_v3';      // データ保存用
+        const newData = { 
+            service, id, pass, 
+            date: new Date().toLocaleDateString('ja-JP'),
+            pinned: false,
+            category: currentTab // カテゴリを保存
+        };
+        
+        let list = JSON.parse(localStorage.getItem(DATA_KEY)) || [];
+        list.push(newData);
+        localStorage.setItem(DATA_KEY, JSON.stringify(list));
+        
+        // クリア
+        document.getElementById('service-name').value = "";
+        document.getElementById('service-id').value = "";
+        document.getElementById('generated-pass').value = "";
+        
+        renderList();
+        updateIdList();
+        showModal("Saved to " + currentTab.toUpperCase() + "!");
+    }
 
-    checkFirstRun();
+    /* --- 4. リスト描画 (カテゴリフィルタ) --- */
+    function renderList() {
+        let list = JSON.parse(localStorage.getItem(DATA_KEY)) || [];
+        const container = document.getElementById('list-container');
+        container.innerHTML = "";
 
+        // フィルタリング: カテゴリがない古いデータは 'web' として扱う
+        const filteredList = list.filter(item => {
+            const cat = item.category || 'web'; 
+            return cat === currentTab;
+        });
+
+        document.getElementById('count-badge').innerText = filteredList.length;
+
+        // ソート: ピン留め > 名前順
+        filteredList.sort((a, b) => {
+            if (a.pinned !== b.pinned) return a.pinned ? -1 : 1;
+            return a.service.toLowerCase().localeCompare(b.service.toLowerCase());
+        });
+
+        filteredList.forEach((item) => {
+            // 全体リストの中でのインデックスを探す（削除・更新用）
+            const realIndex = list.indexOf(item);
+
+            const initial = item.service.charAt(0).toUpperCase() || "?";
+            const pinColor = item.pinned ? "#ffc107" : "#555";
+            const pinClass = item.pinned ? "pinned" : "";
+            
+            // Othersの場合は枠線の色などを変える（任意）
+            const extraClass = currentTab === 'other' ? 'others' : '';
+
+            const html = `
+            <div class="item-card ${pinClass} ${extraClass}">
+                <div class="item-header">
+                    <div style="display:flex; align-items:center; max-width:85%;">
+                        <div class="logo-circle">${initial}</div>
+                        <div class="service-name">${item.service}</div>
+                    </div>
+                    <div style="cursor:pointer; font-size:1.5em; color:${pinColor};" onclick="togglePin(${realIndex})">★</div>
+                </div>
+
+                <div class="data-label"><span>ID</span> <span style="font-size:0.8em; color:#555;">TAP TO COPY</span></div>
+                <div class="data-row" onclick="copyText('${item.id}')">
+                    <span style="overflow:hidden; text-overflow:ellipsis;">${item.id}</span>
+                    <span>📋</span>
+                </div>
+
+                <div class="data-label"><span>PASSWORD</span> <span style="font-size:0.8em; color:#555;">TAP TO COPY</span></div>
+                <div class="data-row" onclick="copyText('${item.pass}')">
+                    <span class="masked-pass" id="pass-display-${realIndex}">●●●●●●●●</span>
+                    <span style="display:none;" class="print-show">${item.pass}</span>
+                    <span style="cursor:pointer;" onclick="event.stopPropagation(); togglePassVis(${realIndex}, '${item.pass}')">👁️</span>
+                </div>
+                
+                <div style="text-align:right; margin-top:5px;">
+                    <span style="font-size:0.7em; color:#666; float:left; margin-top:5px;">${item.date}</span>
+                    <button style="width:auto; padding:5px 10px; font-size:0.8em; background:none; border:1px solid #d9534f; color:#d9534f; margin:0;" onclick="deleteData(${realIndex})">DELETE</button>
+                </div>
+            </div>`;
+            container.innerHTML += html;
+        });
+    }
+
+    /* --- 5. 共通機能 --- */
     function checkFirstRun() {
         const savedPass = localStorage.getItem(MASTER_KEY);
         if (!savedPass) {
@@ -300,26 +426,28 @@
 
     function setMasterPass() {
         const val = document.getElementById('new-master-pass').value;
-        if(val.length < 4) { showModal("Security Alert:\nPlease set at least 4 characters."); return; }
+        const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{}|;:,.<>?]).{8,16}$/;
+
+        if (!regex.test(val)) {
+            showModal("パスワードの条件を満たしていません。\n\n・8〜16文字\n・大文字、小文字、数字、記号\n\nをそれぞれ1文字以上含めてください。");
+            return;
+        }
         
-        showModal("Set Password to: " + val + "?\n(Cannot be recovered if lost)", true, function(){
+        showModal("このパスワードで設定しますか？\n" + val + "\n\n(重要：紛失すると復元できません)", true, function(){
             localStorage.setItem(MASTER_KEY, val);
-            // 完了メッセージ後にリロード
-            showModal("Setup Complete!", false, function(){
+            showModal("設定が完了しました！", false, function(){
                  location.reload(); 
             });
-            setTimeout(() => location.reload(), 1500);
         });
     }
 
     function unlockApp() {
         const input = document.getElementById('input-master-pass').value;
         const saved = localStorage.getItem(MASTER_KEY);
-        
         if (input === saved) {
             document.getElementById('lock-screen').style.display = 'none';
             document.getElementById('app-screen').style.display = 'block';
-            loadData(); 
+            renderList(); 
         } else {
             showModal("Wrong Password");
             document.getElementById('input-master-pass').value = "";
@@ -327,18 +455,16 @@
     }
 
     function resetApp() {
-        showModal("WARNING:\nResetting will DELETE ALL DATA.\nAre you sure?", true, function(){
-            showModal("FINAL WARNING:\nData cannot be restored.\nDelete everything?", true, function(){
+        showModal("【警告】\nリセットすると全てのデータが削除されます。\n本当によろしいですか？", true, function(){
+            showModal("【最終確認】\n削除されたデータは二度と戻りません。\n実行しますか？", true, function(){
                 localStorage.removeItem(MASTER_KEY);
                 localStorage.removeItem(DATA_KEY);
-                alert("Reset Complete."); // 最後だけalert許容(リロード直前)
+                alert("リセットしました。");
                 location.reload();
             });
         });
     }
 
-
-    /* --- 3. アプリ基本機能 --- */
     function generatePassword() {
         const len = document.getElementById('pass-length').value;
         const chars = [
@@ -349,7 +475,6 @@
         ].join("");
 
         if (!chars) { showModal("Please select at least one character type."); return; }
-
         let password = "";
         for (let i = 0; i < len; i++) {
             password += chars[Math.floor(Math.random() * chars.length)];
@@ -357,95 +482,46 @@
         document.getElementById('generated-pass').value = password;
     }
 
-    function saveData() {
-        const service = document.getElementById('service-name').value;
-        const id = document.getElementById('service-id').value;
-        const pass = document.getElementById('generated-pass').value;
-        
-        if (!service || !pass) { showModal("Service Name and Password required."); return; }
+    function updateIdList() {
+        const list = JSON.parse(localStorage.getItem(DATA_KEY)) || [];
+        const datalist = document.getElementById('id-history');
+        const uniqueIds = new Set();
+        list.forEach(item => { if(item.id) uniqueIds.add(item.id); });
 
-        const newData = { 
-            service, id, pass, 
-            date: new Date().toLocaleDateString('ja-JP'),
-            pinned: false 
-        };
-        
-        let list = JSON.parse(localStorage.getItem(DATA_KEY)) || [];
-        list.push(newData);
-        localStorage.setItem(DATA_KEY, JSON.stringify(list));
-        
-        document.getElementById('service-name').value = "";
-        document.getElementById('service-id').value = "";
-        document.getElementById('generated-pass').value = "";
-        renderList();
-        showModal("Saved to Wallet!");
-    }
-
-    function renderList() {
-        let list = JSON.parse(localStorage.getItem(DATA_KEY)) || [];
-        const container = document.getElementById('list-container');
-        document.getElementById('count-badge').innerText = list.length;
-        container.innerHTML = "";
-
-        list.sort((a, b) => {
-            if (a.pinned !== b.pinned) return a.pinned ? -1 : 1;
-            return a.service.toLowerCase().localeCompare(b.service.toLowerCase());
-        });
-        localStorage.setItem(DATA_KEY, JSON.stringify(list));
-
-        list.forEach((item, index) => {
-            const initial = item.service.charAt(0).toUpperCase() || "?";
-            const pinColor = item.pinned ? "#ffc107" : "#555";
-            const pinClass = item.pinned ? "pinned" : "";
-
-            const html = `
-            <div class="item-card ${pinClass}">
-                <div class="item-header">
-                    <div style="display:flex; align-items:center; max-width:85%;">
-                        <div class="logo-circle">${initial}</div>
-                        <div class="service-name">${item.service}</div>
-                    </div>
-                    <div style="cursor:pointer; font-size:1.5em; color:${pinColor};" onclick="togglePin(${index})">★</div>
-                </div>
-
-                <div class="data-label"><span>ID</span> <span style="font-size:0.8em; color:#555;">TAP TO COPY</span></div>
-                <div class="data-row" onclick="copyText('${item.id}')">
-                    <span style="overflow:hidden; text-overflow:ellipsis;">${item.id}</span>
-                    <span>📋</span>
-                </div>
-
-                <div class="data-label"><span>PASSWORD</span> <span style="font-size:0.8em; color:#555;">TAP TO COPY</span></div>
-                <div class="data-row" onclick="copyText('${item.pass}')">
-                    <span class="masked-pass" id="pass-display-${index}">●●●●●●●●</span>
-                    <span style="display:none;" class="print-show">${item.pass}</span>
-                    <span style="cursor:pointer;" onclick="event.stopPropagation(); togglePassVis(${index}, '${item.pass}')">👁️</span>
-                </div>
-                
-                <div style="text-align:right; margin-top:5px;">
-                    <span style="font-size:0.7em; color:#666; float:left; margin-top:5px;">${item.date}</span>
-                    <button style="width:auto; padding:5px 10px; font-size:0.8em; background:none; border:1px solid #d9534f; color:#d9534f; margin:0;" onclick="deleteData(${index})">DELETE</button>
-                </div>
-            </div>`;
-            container.innerHTML += html;
+        datalist.innerHTML = "";
+        uniqueIds.forEach(id => {
+            const option = document.createElement('option');
+            option.value = id;
+            datalist.appendChild(option);
         });
     }
 
     function shareData() {
-        const list = JSON.parse(localStorage.getItem(DATA_KEY)) || [];
-        if (list.length === 0) { showModal("No Data"); return; }
-
-        let csvContent = "Service,ID,Password,Date\n";
-        list.forEach(item => {
-            csvContent += `${item.service},${item.id},${item.pass},${item.date}\n`;
+        // Othersカテゴリのデータもエクスポートして良いか？
+        // 印刷は禁止だがCSVはバックアップ用途として全データ出すのが一般的。
+        // ここでは「現在のタブ」のデータだけ出すようにするか、全データか選べるが、
+        // 利便性のため「表示中のカテゴリ」のみエクスポートする仕様にする。
+        
+        let list = JSON.parse(localStorage.getItem(DATA_KEY)) || [];
+        const filteredList = list.filter(item => {
+            const cat = item.category || 'web';
+            return cat === currentTab;
         });
 
-        const file = new File([csvContent], "passcard_backup.csv", { type: "text/csv" });
+        if (filteredList.length === 0) { showModal("No Data in this category."); return; }
+
+        let csvContent = "Category,Service,ID,Password,Date\n";
+        filteredList.forEach(item => {
+            csvContent += `${currentTab},${item.service},${item.id},${item.pass},${item.date}\n`;
+        });
+
+        const file = new File([csvContent], "passcard_" + currentTab + ".csv", { type: "text/csv" });
         if (navigator.canShare && navigator.canShare({ files: [file] })) {
             navigator.share({ title: 'PassCard Backup', files: [file] }).catch(console.error);
         } else {
             const link = document.createElement("a");
             link.href = URL.createObjectURL(file);
-            link.download = "passcard_backup.csv";
+            link.download = "passcard_" + currentTab + ".csv";
             link.click();
         }
     }
@@ -472,14 +548,40 @@
         navigator.clipboard.writeText(text).then(() => showToast("Copied!"));
     }
 
+    function showModal(msg, isConfirm = false, yesCallback = null) {
+        const overlay = document.getElementById('custom-modal-overlay');
+        const msgDiv = document.getElementById('modal-msg');
+        const btnsDiv = document.getElementById('modal-btns');
+        msgDiv.innerHTML = msg.replace(/\n/g, '<br>');
+        btnsDiv.innerHTML = "";
+
+        if (isConfirm) {
+            const btnYes = document.createElement('button');
+            btnYes.className = 'btn-modal btn-modal-ok';
+            btnYes.innerText = 'YES';
+            btnYes.onclick = function() { overlay.style.display = 'none'; if(yesCallback) yesCallback(); };
+            const btnNo = document.createElement('button');
+            btnNo.className = 'btn-modal btn-modal-cancel';
+            btnNo.innerText = 'NO';
+            btnNo.onclick = function() { overlay.style.display = 'none'; };
+            btnsDiv.appendChild(btnNo);
+            btnsDiv.appendChild(btnYes);
+        } else {
+            const btnOk = document.createElement('button');
+            btnOk.className = 'btn-modal btn-modal-ok';
+            btnOk.innerText = 'OK';
+            btnOk.onclick = function() { overlay.style.display = 'none'; };
+            btnsDiv.appendChild(btnOk);
+        }
+        overlay.style.display = 'flex';
+    }
+
     function showToast(msg) {
         const x = document.getElementById("toast");
         x.innerText = msg;
         x.className = "show";
         setTimeout(() => x.className = x.className.replace("show", ""), 2000);
     }
-
-    function loadData() { renderList(); }
     
     function deleteData(index) {
         showModal("Delete this card?", true, function(){
@@ -487,8 +589,11 @@
             list.splice(index, 1);
             localStorage.setItem(DATA_KEY, JSON.stringify(list));
             renderList();
+            updateIdList();
         });
     }
+
+    function loadData() { renderList(); }
 
     /* 印刷時の処理 */
     window.onbeforeprint = function() {
