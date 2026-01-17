@@ -3,12 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>PassCard Metal V3</title>
+<title>PassCard Metal</title>
 <style>
     /* --- 全体設定 --- */
     body {
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-        background-color: #121212; /* より深い黒 */
+        background-color: #121212; /* Deep Black */
         color: #e0e0e0;
         margin: 0;
         padding: 20px 10px;
@@ -16,149 +16,105 @@
     }
 
     h2, h3 { margin: 0; font-weight: 700; letter-spacing: 0.05em; }
-    p { margin: 5px 0 15px; color: #aaa; font-size: 0.9em; }
 
     /* --- コンテナ --- */
     .container { max-width: 500px; margin: 0 auto; padding-bottom: 60px; }
 
     /* --- メタルカードデザイン --- */
     .card {
-        background: linear-gradient(135deg, #3a3a3a, #222); /* 立体感のあるグラデーション */
+        background: linear-gradient(135deg, #3a3a3a, #222);
         border: 1px solid #555;
-        border-top: 1px solid #777; /* 光の反射表現 */
+        border-top: 1px solid #777;
         border-radius: 16px;
         padding: 20px;
         margin-bottom: 25px;
         box-shadow: 0 10px 20px rgba(0,0,0,0.5);
     }
 
-    /* --- 入力フォーム（ハイコントラスト化） --- */
+    /* --- 入力フォーム --- */
     .input-group { margin-bottom: 15px; }
     
     label { 
-        display: block; 
-        margin-bottom: 6px; 
-        font-size: 0.85em; 
-        color: #ccc; 
-        font-weight: bold;
-        display: flex;
-        justify-content: space-between;
+        display: flex; justify-content: space-between;
+        margin-bottom: 6px; font-size: 0.85em; color: #ccc; font-weight: bold;
     }
-    label span.en { font-weight: normal; color: #777; font-size: 0.9em; } /* 英語補足 */
+    label span.en { font-weight: normal; color: #777; font-size: 0.9em; }
 
-    /* 入力欄を明るくして視認性アップ */
     input[type="text"], input[type="password"], input[type="number"] {
-        width: 100%;
-        padding: 12px;
-        background: #f0f0f0; /* 明るいグレー */
-        color: #111; /* 文字は黒 */
-        border: 2px solid #ccc;
-        border-radius: 6px;
-        font-size: 1em;
-        font-weight: 500;
-        box-sizing: border-box;
-        outline: none;
-        box-shadow: inset 0 2px 4px rgba(0,0,0,0.1); /* 内側の影で凹み表現 */
+        width: 100%; padding: 12px;
+        background: #f0f0f0; color: #111;
+        border: 2px solid #ccc; border-radius: 6px;
+        font-size: 1em; font-weight: 500;
+        box-sizing: border-box; outline: none;
     }
     input:focus { border-color: #007bff; background: #fff; }
 
     /* --- オプションエリア --- */
     .options {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 12px;
-        margin-bottom: 20px;
-        padding: 10px;
-        background: rgba(0,0,0,0.2);
-        border-radius: 8px;
+        display: flex; flex-wrap: wrap; gap: 12px;
+        margin-bottom: 20px; padding: 10px;
+        background: rgba(0,0,0,0.2); border-radius: 8px;
     }
-    .options label {
-        color: #ddd;
-        font-size: 0.9em;
-        display: flex;
-        align-items: center;
-        margin: 0;
-        cursor: pointer;
-        padding: 5px;
-    }
+    .options label { color: #ddd; font-size: 0.9em; display: flex; align-items: center; margin: 0; cursor: pointer; }
     input[type="checkbox"] { transform: scale(1.2); margin-right: 8px; }
 
     /* --- ボタン類 --- */
     button {
-        cursor: pointer;
-        padding: 15px;
-        border: none;
-        border-radius: 8px;
-        font-weight: bold;
-        font-size: 1em;
-        width: 100%;
-        margin-bottom: 12px;
-        transition: opacity 0.2s, transform 0.1s;
-        color: white;
-        text-transform: uppercase;
-        letter-spacing: 1px;
+        cursor: pointer; padding: 15px;
+        border: none; border-radius: 8px;
+        font-weight: bold; font-size: 1em; width: 100%;
+        margin-bottom: 12px; color: white;
+        text-transform: uppercase; letter-spacing: 1px;
         box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        transition: transform 0.1s;
     }
     button:active { transform: scale(0.97); }
 
     .btn-gen { background: linear-gradient(to right, #007bff, #0056b3); }
     .btn-save { background: linear-gradient(to right, #28a745, #1e7e34); }
     
-    /* 共有・便利機能ボタンエリア */
     .action-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
     .btn-sub { 
-        background: #444; border: 1px solid #666; font-size: 0.85em; padding: 10px; margin: 0; 
-        display: flex; align-items: center; justify-content: center; gap: 5px;
+        background: #444; border: 1px solid #666; font-size: 0.85em; padding: 10px; 
+        display: flex; align-items: center; justify-content: center; gap: 5px; margin: 0;
     }
 
     /* --- リスト表示 --- */
     .item-card {
-        background: #252525;
-        border-left: 5px solid #007bff;
-        border-radius: 8px;
-        padding: 15px;
-        margin-bottom: 15px;
-        position: relative;
-        box-shadow: 0 4px 8px rgba(0,0,0,0.3);
+        background: #252525; border-left: 5px solid #007bff;
+        border-radius: 8px; padding: 15px; margin-bottom: 15px;
+        position: relative; box-shadow: 0 4px 8px rgba(0,0,0,0.3);
     }
     .item-card.pinned { border-left-color: #ffc107; background: #2b2b24; }
 
-    .item-header {
-        display: flex;
-        align-items: center;
-        margin-bottom: 12px;
-        justify-content: space-between;
-    }
+    .item-header { display: flex; align-items: center; margin-bottom: 12px; justify-content: space-between; }
     .logo-circle {
-        width: 42px; height: 42px;
-        background: #555; color: #fff;
-        border-radius: 50%;
-        display: flex; align-items: center; justify-content: center;
-        font-weight: bold; font-size: 1.2em;
-        margin-right: 12px;
-        text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+        width: 42px; height: 42px; background: #555; color: #fff;
+        border-radius: 50%; display: flex; align-items: center; justify-content: center;
+        font-weight: bold; font-size: 1.2em; margin-right: 12px;
     }
     .service-name { font-size: 1.1em; font-weight: bold; color: #fff; }
 
-    /* データ行のデザイン */
     .data-row {
-        background: #1a1a1a;
-        padding: 12px;
-        border-radius: 6px;
-        margin-bottom: 10px;
-        font-family: monospace;
-        font-size: 1.1em;
+        background: #1a1a1a; padding: 12px; border-radius: 6px;
+        margin-bottom: 10px; font-family: monospace; font-size: 1.1em;
         display: flex; justify-content: space-between; align-items: center;
         border: 1px solid #333;
     }
     .data-label { font-size: 0.75em; color: #888; margin-bottom: 4px; display: flex; justify-content: space-between;}
     
-    /* --- ロック画面 & トースト --- */
+    /* --- ロック画面 --- */
     #lock-screen {
         position: fixed; top: 0; left: 0; width: 100%; height: 100%;
         background: #121212; z-index: 9999;
         display: flex; flex-direction: column; justify-content: center; align-items: center;
     }
+    .lock-input {
+        text-align:center; letter-spacing: 5px; margin-bottom: 20px; 
+        background:#333 !important; color:white !important; border:none !important;
+    }
+
+    /* トースト */
     #toast {
         visibility: hidden; min-width: 200px; background-color: #333; color: #fff;
         text-align: center; border-radius: 50px; padding: 12px 20px;
@@ -167,15 +123,13 @@
     }
     #toast.show { visibility: visible; opacity: 1; }
 
-    /* 印刷用スタイル (PDF保存時) */
+    /* 印刷設定 */
     @media print {
         body { background: white; color: black; }
-        .card, .btn-gen, .btn-save, .action-buttons, .pin-icon, .btn-del { display: none; }
-        .item-card { page-break-inside: avoid; border: 1px solid #ccc; background: white; color: black; box-shadow: none; margin-bottom: 20px;}
+        .card, .btn-gen, .btn-save, .action-buttons, .pin-icon, .btn-del, header, .options { display: none; }
+        .item-card { border: 1px solid #ccc; background: white; color: black; box-shadow: none; break-inside: avoid; }
         .data-row { background: #eee; border: 1px solid #ddd; color: black; }
-        .logo-circle { background: #333; color: white; -webkit-print-color-adjust: exact; }
-        h3 { border-bottom: 1px solid black; padding-bottom: 10px; margin-bottom: 20px; }
-        .masked-pass { display: none; } /* 印刷時は隠さない、またはJSで制御 */
+        .masked-pass { display: none; }
     }
 
 </style>
@@ -187,83 +141,134 @@
 <div id="lock-screen">
     <div style="text-align:center;">
         <h2 style="color:#fff; font-size:2em; margin-bottom:10px;">PassCard</h2>
-        <p>Metal Edition</p>
-    </div>
-    <div style="width: 80%; max-width: 300px;">
-        <input type="password" id="master-pass" placeholder="Pass (1234)" style="text-align:center; letter-spacing: 5px; margin-bottom: 20px; background:#333; color:white; border:none;">
-        <button onclick="unlockApp()" style="background:#444;">UNLOCK</button>
+        <p style="color:#777; margin-bottom: 30px;">Metal Edition</p>
+        
+        <div id="setup-mode" style="display:none; width: 300px;">
+            <p style="color:#aaa; font-size:0.9em;">初期設定: マスターパスワードを決めてください</p>
+            <input type="password" id="new-master-pass" placeholder="Password" class="lock-input">
+            <button onclick="setMasterPass()" style="background:#007bff;">START</button>
+        </div>
+
+        <div id="unlock-mode" style="display:none; width: 300px;">
+            <input type="password" id="input-master-pass" placeholder="Password" class="lock-input">
+            <button onclick="unlockApp()" style="background:#444;">UNLOCK</button>
+            
+            <p style="margin-top:40px; color:#d9534f; font-size:0.8em; text-decoration:underline; cursor:pointer;" onclick="resetApp()">
+                パスワードを忘れましたか？<br>(全データ削除してリセット)
+            </p>
+        </div>
     </div>
 </div>
 
 <div id="app-screen" class="container" style="display:none;">
     
     <div class="card">
-        <h3>新規カード作成 <span style="font-size:0.6em; color:#777; font-weight:normal;">NEW CARD</span></h3>
-        <p>サービス情報を入力してカードを発行します</p>
+        <h3>NEW CARD <span style="font-size:0.6em; color:#777; font-weight:normal;">新規作成</span></h3>
+        <div style="margin-top:15px;"></div>
         
         <div class="input-group">
-            <label>サービス名 <span class="en">SERVICE NAME</span></label>
+            <label>SERVICE NAME <span class="en">サービス名</span></label>
             <input type="text" id="service-name" placeholder="例: Amazon, Google...">
         </div>
         <div class="input-group">
-            <label>ID / ユーザー名 <span class="en">ID / USERNAME</span></label>
+            <label>ID / USERNAME <span class="en">ID / ユーザー名</span></label>
             <input type="text" id="service-id" placeholder="例: email@example.com">
         </div>
 
-        <label>パスワード設定 <span class="en">PASSWORD SETTINGS</span></label>
+        <label>OPTIONS <span class="en">生成設定</span></label>
         <div class="options">
-            <label><input type="checkbox" id="use-upper" checked> 大文字 (A-Z)</label>
-            <label><input type="checkbox" id="use-lower" checked> 小文字 (a-z)</label>
-            <label><input type="checkbox" id="use-number" checked> 数字 (0-9)</label>
-            <label><input type="checkbox" id="use-symbol"> 記号 (#$%)</label>
+            <label><input type="checkbox" id="use-upper" checked> ABC</label>
+            <label><input type="checkbox" id="use-lower" checked> abc</label>
+            <label><input type="checkbox" id="use-number" checked> 123</label>
+            <label><input type="checkbox" id="use-symbol"> #$%</label>
             <div style="width: 100%; margin-top:10px; display: flex; align-items: center; gap: 10px; color:#ddd;">
-                <span>文字数:</span>
+                <span>Length:</span>
                 <input type="range" id="pass-length" min="4" max="32" value="12" style="flex-grow:1;" oninput="document.getElementById('len-val').innerText=this.value">
                 <span id="len-val" style="font-weight:bold; width: 30px; text-align:right;">12</span>
             </div>
         </div>
 
-        <button onclick="generatePassword()" class="btn-gen">パスワードを生成する</button>
+        <button onclick="generatePassword()" class="btn-gen">GENERATE PASSWORD</button>
         
         <div class="input-group">
-            <input type="text" id="generated-pass" placeholder="ここに生成されます" style="text-align:center; letter-spacing:1px; background:#fff; font-size:1.2em;">
+            <input type="text" id="generated-pass" placeholder="Generated Password" style="text-align:center; letter-spacing:1px; background:#fff; font-size:1.2em;">
         </div>
 
-        <button onclick="saveData()" class="btn-save">カード入れに保存</button>
+        <button onclick="saveData()" class="btn-save">ADD TO WALLET</button>
     </div>
 
     <h3 style="margin-bottom:15px; display:flex; justify-content:space-between; align-items:center;">
-        保存済みカード <span style="font-size:0.6em; color:#777; font-weight:normal;">MY WALLET</span>
+        MY WALLET
         <span id="count-badge" style="background:#444; font-size:0.6em; padding:2px 8px; border-radius:10px;">0</span>
     </h3>
 
     <div class="action-buttons">
-        <button onclick="shareData()" class="btn-sub">
-            <span style="font-size:1.2em">📤</span> 共有 / 出力
-        </button>
-        <button onclick="window.print()" class="btn-sub">
-            <span style="font-size:1.2em">🖨️</span> 印刷 / PDF
-        </button>
+        <button onclick="shareData()" class="btn-sub"><span style="font-size:1.2em">📤</span> Export</button>
+        <button onclick="window.print()" class="btn-sub"><span style="font-size:1.2em">🖨️</span> Print / PDF</button>
     </div>
 
     <div id="list-container"></div>
-
 </div>
 
 <script>
-    // --- 1. アプリのロック機能 ---
-    function unlockApp() {
-        const input = document.getElementById('master-pass').value;
-        if (input === '1234') { 
-            document.getElementById('lock-screen').style.display = 'none';
-            document.getElementById('app-screen').style.display = 'block';
-            loadData();
+    /* --- 1. ロック & セットアップ機能 --- */
+    const MASTER_KEY = 'passCard_MasterKey'; // パスワード保存用
+    const DATA_KEY = 'passCardData_v3';      // データ保存用
+
+    // 起動時にチェック
+    checkFirstRun();
+
+    function checkFirstRun() {
+        const savedPass = localStorage.getItem(MASTER_KEY);
+        if (!savedPass) {
+            // 初回: セットアップ画面
+            document.getElementById('setup-mode').style.display = 'block';
+            document.getElementById('unlock-mode').style.display = 'none';
         } else {
-            alert('パスワードが違います');
+            // 2回目以降: ロック画面
+            document.getElementById('setup-mode').style.display = 'none';
+            document.getElementById('unlock-mode').style.display = 'block';
         }
     }
 
-    // --- 2. パスワード生成 ---
+    function setMasterPass() {
+        const val = document.getElementById('new-master-pass').value;
+        if(val.length < 4) { alert("セキュリティのため、4文字以上で設定してください"); return; }
+        
+        if(confirm("パスワードは「" + val + "」でよろしいですか？\n忘れると二度と開けません。")) {
+            localStorage.setItem(MASTER_KEY, val);
+            alert("設定完了！");
+            location.reload(); // リロードしてロック画面へ
+        }
+    }
+
+    function unlockApp() {
+        const input = document.getElementById('input-master-pass').value;
+        const saved = localStorage.getItem(MASTER_KEY);
+        
+        if (input === saved) {
+            document.getElementById('lock-screen').style.display = 'none';
+            document.getElementById('app-screen').style.display = 'block';
+            loadData(); // データ読み込み開始
+        } else {
+            alert("パスワードが違います");
+            document.getElementById('input-master-pass').value = "";
+        }
+    }
+
+    function resetApp() {
+        if(confirm("【警告】\nパスワードを忘れた場合、セキュリティ保護のためデータを全消去（初期化）する必要があります。\n\n本当に実行しますか？")) {
+            if(confirm("【最終確認】\n保存されたパスワードは全て消えます。\n復元はできません。\n\nよろしいですか？")) {
+                localStorage.removeItem(MASTER_KEY);
+                localStorage.removeItem(DATA_KEY);
+                alert("初期化されました。新しいパスワードを設定してください。");
+                location.reload();
+            }
+        }
+    }
+
+
+    /* --- 2. アプリ基本機能 --- */
     function generatePassword() {
         const len = document.getElementById('pass-length').value;
         const chars = [
@@ -273,7 +278,7 @@
             document.getElementById('use-symbol').checked ? "!@#$%^&*()_+-=[]{}|;:,.<>?" : ""
         ].join("");
 
-        if (!chars) { alert("文字種を最低1つ選んでください"); return; }
+        if (!chars) { alert("文字種を選んでください"); return; }
 
         let password = "";
         for (let i = 0; i < len; i++) {
@@ -282,13 +287,12 @@
         document.getElementById('generated-pass').value = password;
     }
 
-    // --- 3. データ保存 ---
     function saveData() {
         const service = document.getElementById('service-name').value;
         const id = document.getElementById('service-id').value;
         const pass = document.getElementById('generated-pass').value;
         
-        if (!service || !pass) { alert("サービス名とパスワードが必要です"); return; }
+        if (!service || !pass) { alert("Service Name and Password required."); return; }
 
         const newData = { 
             service, id, pass, 
@@ -296,31 +300,28 @@
             pinned: false 
         };
         
-        let list = JSON.parse(localStorage.getItem('passCardData_v3')) || [];
+        let list = JSON.parse(localStorage.getItem(DATA_KEY)) || [];
         list.push(newData);
-        localStorage.setItem('passCardData_v3', JSON.stringify(list));
+        localStorage.setItem(DATA_KEY, JSON.stringify(list));
         
-        // クリア
         document.getElementById('service-name').value = "";
         document.getElementById('service-id').value = "";
         document.getElementById('generated-pass').value = "";
         renderList();
-        showToast("カードを追加しました");
+        showToast("Added to Wallet");
     }
 
-    // --- 4. リスト描画 ---
     function renderList() {
-        let list = JSON.parse(localStorage.getItem('passCardData_v3')) || [];
+        let list = JSON.parse(localStorage.getItem(DATA_KEY)) || [];
         const container = document.getElementById('list-container');
         document.getElementById('count-badge').innerText = list.length;
         container.innerHTML = "";
 
-        // ソート: ピン留め順 > 名前順
         list.sort((a, b) => {
             if (a.pinned !== b.pinned) return a.pinned ? -1 : 1;
             return a.service.toLowerCase().localeCompare(b.service.toLowerCase());
         });
-        localStorage.setItem('passCardData_v3', JSON.stringify(list)); // ソート状態保存
+        localStorage.setItem(DATA_KEY, JSON.stringify(list));
 
         list.forEach((item, index) => {
             const initial = item.service.charAt(0).toUpperCase() || "?";
@@ -346,56 +347,43 @@
                 <div class="data-label"><span>PASSWORD</span> <span style="font-size:0.8em; color:#555;">TAP TO COPY</span></div>
                 <div class="data-row" onclick="copyText('${item.pass}')">
                     <span class="masked-pass" id="pass-display-${index}">●●●●●●●●</span>
+                    <span style="display:none;" class="print-show">${item.pass}</span>
                     <span style="cursor:pointer;" onclick="event.stopPropagation(); togglePassVis(${index}, '${item.pass}')">👁️</span>
                 </div>
                 
                 <div style="text-align:right; margin-top:5px;">
-                    <span style="font-size:0.7em; color:#666; float:left; margin-top:5px;">登録: ${item.date}</span>
-                    <button style="width:auto; padding:5px 10px; font-size:0.8em; background:none; border:1px solid #d9534f; color:#d9534f; margin:0;" onclick="deleteData(${index})">削除</button>
+                    <span style="font-size:0.7em; color:#666; float:left; margin-top:5px;">${item.date}</span>
+                    <button style="width:auto; padding:5px 10px; font-size:0.8em; background:none; border:1px solid #d9534f; color:#d9534f; margin:0;" onclick="deleteData(${index})">DELETE</button>
                 </div>
             </div>`;
             container.innerHTML += html;
         });
     }
 
-    // --- 5. 共有機能 (CSV Share API) ---
-    async function shareData() {
-        const list = JSON.parse(localStorage.getItem('passCardData_v3')) || [];
-        if (list.length === 0) { alert("データがありません"); return; }
+    function shareData() {
+        const list = JSON.parse(localStorage.getItem(DATA_KEY)) || [];
+        if (list.length === 0) { alert("No Data"); return; }
 
-        let csvContent = "サービス名,ID,パスワード,登録日\n";
+        let csvContent = "Service,ID,Password,Date\n";
         list.forEach(item => {
             csvContent += `${item.service},${item.id},${item.pass},${item.date}\n`;
         });
 
         const file = new File([csvContent], "passcard_backup.csv", { type: "text/csv" });
-
-        // Web Share API (スマホ用)
         if (navigator.canShare && navigator.canShare({ files: [file] })) {
-            try {
-                await navigator.share({
-                    title: 'PassCard Backup',
-                    text: 'PassCardのバックアップファイルです。',
-                    files: [file]
-                });
-            } catch (err) {
-                console.log('共有キャンセル', err);
-            }
+            navigator.share({ title: 'PassCard Backup', files: [file] }).catch(console.error);
         } else {
-            // PCなどのフォールバック (従来のダウンロード)
             const link = document.createElement("a");
             link.href = URL.createObjectURL(file);
             link.download = "passcard_backup.csv";
             link.click();
-            showToast("ダウンロードしました");
         }
     }
 
-    // --- 便利機能 ---
     function togglePin(index) {
-        let list = JSON.parse(localStorage.getItem('passCardData_v3')) || [];
+        let list = JSON.parse(localStorage.getItem(DATA_KEY)) || [];
         list[index].pinned = !list[index].pinned;
-        localStorage.setItem('passCardData_v3', JSON.stringify(list));
+        localStorage.setItem(DATA_KEY, JSON.stringify(list));
         renderList();
     }
 
@@ -411,7 +399,7 @@
     }
 
     function copyText(text) {
-        navigator.clipboard.writeText(text).then(() => showToast("コピーしました"));
+        navigator.clipboard.writeText(text).then(() => showToast("Copied!"));
     }
 
     function showToast(msg) {
@@ -424,15 +412,24 @@
     function loadData() { renderList(); }
     
     function deleteData(index) {
-        if(confirm('本当に削除しますか？')) {
-            let list = JSON.parse(localStorage.getItem('passCardData_v3')) || [];
+        if(confirm('Delete this card?')) {
+            let list = JSON.parse(localStorage.getItem(DATA_KEY)) || [];
             list.splice(index, 1);
-            localStorage.setItem('passCardData_v3', JSON.stringify(list));
+            localStorage.setItem(DATA_KEY, JSON.stringify(list));
             renderList();
         }
     }
+
+    /* 印刷時の処理（マスク解除用） */
+    window.onbeforeprint = function() {
+        document.querySelectorAll('.masked-pass').forEach(e => e.style.display = 'none');
+        document.querySelectorAll('.print-show').forEach(e => e.style.display = 'inline');
+    };
+    window.onafterprint = function() {
+        document.querySelectorAll('.masked-pass').forEach(e => e.style.display = 'block');
+        document.querySelectorAll('.print-show').forEach(e => e.style.display = 'none');
+    };
 </script>
 
 </body>
 </html>
-
