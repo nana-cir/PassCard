@@ -3,10 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>PassCard Metal V8</title>
+<title>PassCard Metal V8.1</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 <style>
-    /* --- Metal V8 Design System --- */
+    /* --- Metal V8.1 Design System --- */
     body {
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
         background-color: #121212; color: #e0e0e0;
@@ -25,21 +25,41 @@
         display: flex; justify-content: center; align-items: center; font-size: 1.1em;
     }
 
-    /* Cards & Inputs */
+    /* Cards */
     .card {
         background: linear-gradient(135deg, #2c2c2c, #1a1a1a);
         border: 1px solid #444; border-top: 1px solid #666;
         border-radius: 16px; padding: 20px; margin-bottom: 25px;
         box-shadow: 0 10px 25px rgba(0,0,0,0.6);
     }
+    
+    /* Inputs (修正: テキスト系のみに適用) */
     .input-group { margin-bottom: 15px; }
     label { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 0.85em; color: #ccc; font-weight: bold; }
-    input, select {
+    
+    input[type="text"], input[type="password"], input[type="number"], select {
         width: 100%; padding: 14px; background: #eee; color: #111;
         border: none; border-radius: 6px; font-size: 1.1em; font-weight: 500;
         box-sizing: border-box; outline: none; appearance: none;
     }
     input:focus { background: #fff; box-shadow: 0 0 0 2px #007bff; }
+
+    /* Checkbox & Range (修正: 専用スタイル) */
+    .options {
+        display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 20px; padding: 10px;
+        background: rgba(0,0,0,0.2); border-radius: 8px;
+    }
+    .options label { 
+        color: #ddd; font-size: 0.9em; display: flex; align-items: center; 
+        margin: 0; cursor: pointer; width: 45%; /* 2列配置 */
+    }
+    input[type="checkbox"] { 
+        width: auto; margin-right: 10px; transform: scale(1.3); cursor: pointer; 
+        accent-color: #007bff; /* 青色アクセント */
+    }
+    input[type="range"] {
+        width: 100%; cursor: pointer; margin: 0; height: auto; padding: 0; background: transparent;
+    }
 
     /* Tabs */
     .tab-container {
@@ -72,7 +92,7 @@
     }
     .item-card.pinned { border-left-color: #ffc107; background: #2a2a22; }
     .item-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
-    .service-name { font-size: 1.2em; font-weight: bold; color: #fff; }
+    .service-name { font-size: 1.2em; font-weight: bold; color: #fff; word-break: break-all; }
     .data-row {
         background: #151515; padding: 12px; border-radius: 6px; margin-bottom: 10px;
         font-family: monospace; font-size: 1.1em; display: flex; justify-content: space-between; align-items: center;
@@ -86,7 +106,7 @@
         padding: 15px; border-radius: 8px; font-size: 0.85em; margin-bottom: 20px; line-height: 1.5;
     }
 
-    /* --- Modals --- */
+    /* Modals */
     .modal-overlay {
         display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
         background: rgba(0,0,0,0.85); z-index: 9999; justify-content: center; align-items: center;
@@ -98,7 +118,6 @@
         box-shadow: 0 15px 40px rgba(0,0,0,0.8);
     }
     
-    /* Help Modal Specifics */
     #help-content { text-align: left; max-height: 80vh; overflow-y: auto; }
     .help-h { color: #007bff; font-weight: bold; margin: 15px 0 5px; font-size: 1.1em; border-bottom: 1px solid #444; padding-bottom: 3px;}
     .help-p { font-size: 0.9em; color: #aaa; line-height: 1.6; margin-bottom: 10px; }
@@ -106,12 +125,14 @@
     /* Lock Screen */
     #lock-screen { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: #121212; z-index: 9000; display: flex; flex-direction: column; justify-content: center; align-items: center; overflow-y: auto; padding: 20px; box-sizing: border-box; }
     .lock-input { text-align: center; letter-spacing: 3px; background: #333; color: white; margin-bottom: 15px; border: 1px solid #555; }
+    .lock-msg {
+        color: #aaa; font-size: 0.9em; margin-bottom: 20px; line-height: 1.6; text-align: left;
+        background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px; border-left: 3px solid #d9534f;
+    }
+    .rule-list { font-size: 0.8em; color: #888; text-align: left; margin-bottom: 20px; padding-left: 20px; }
 
-    /* Toast */
     #toast { visibility: hidden; min-width: 200px; background-color: #333; color: #fff; text-align: center; border-radius: 50px; padding: 12px 20px; position: fixed; z-index: 10001; bottom: 30px; left: 50%; transform: translateX(-50%); border: 1px solid #555; font-weight: bold; }
     #toast.show { visibility: visible; opacity: 1; }
-
-    /* Hidden inputs */
     .hidden-file { display: none; }
 
     @media print { .no-print, header, .options, .tab-container, button { display: none !important; } body { background: white; color: black; } .item-card { border: 1px solid #000; background: white; color: black; break-inside: avoid; } .data-row { color: black; background: #eee; border: 1px solid #ccc; } .masked-pass { display: none !important; } .print-show { display: inline !important; } }
@@ -131,25 +152,12 @@
 <div id="help-modal-overlay" class="modal-overlay">
     <div class="modal-box" id="help-content">
         <h2 style="color:#fff; margin-top:0;">使い方ガイド</h2>
-        
-        <div class="help-h">📱 データはどこにある？</div>
-        <div class="help-p">
-            データはこのスマホの<strong>「ブラウザの中」</strong>に暗号化されて保存されています。<br>
-            <span style="color:#ff6b6b;">注意：「履歴を消去」するとデータも消えます。</span>
-        </div>
-
-        <div class="help-h">💾 バックアップ（最重要）</div>
-        <div class="help-p">
-            定期的に<strong>[JSONバックアップ]</strong>ボタンを押して、ファイルを保存してください。<br>
-            データが消えても、そのファイルがあれば復元できます。
-        </div>
-
-        <div class="help-h">📂 復元のしかた</div>
-        <div class="help-p">
-            もしデータが消えたり、間違って削除した場合は、<br>
-            <strong>[バックアップ読み込み]</strong>ボタンから、保存しておいたJSONファイルを選択してください。
-        </div>
-
+        <div class="help-h">📱 データはどこ？</div>
+        <div class="help-p">スマホのブラウザ内に暗号化して保存されています。<br><span style="color:#ff6b6b;">※履歴削除で消えます。</span></div>
+        <div class="help-h">💾 バックアップ</div>
+        <div class="help-p">定期的に<strong>[JSONバックアップ]</strong>ボタンでファイルを保存してください。</div>
+        <div class="help-h">📂 復元</div>
+        <div class="help-p"><strong>[バックアップ読み込み]</strong>ボタンから、保存したJSONファイルを選択します。</div>
         <button class="btn-main btn-gen" onclick="closeHelp()">閉じる</button>
     </div>
 </div>
@@ -157,25 +165,18 @@
 <div id="lock-screen">
     <div style="width:100%; max-width:350px; text-align:center;">
         <h2 style="color:#fff; font-size:2em; margin-bottom:5px;">PassCard</h2>
-        <p style="color:#777; margin-bottom:25px;">Metal V8</p>
+        <p style="color:#777; margin-bottom:25px;">Metal V8.1</p>
 
         <div id="setup-mode" style="display:none;">
             <div style="background:rgba(0,123,255,0.1); border:1px solid #007bff; padding:15px; border-radius:8px; margin-bottom:20px; text-align:left; color:#ccc; font-size:0.9em;">
-                <strong>【初期設定】</strong><br>
-                マスターパスワードと、忘れた時のための「秘密の質問」を設定してください。
+                <strong>【初期設定】</strong><br>マスターパスワードと、忘れた時のための「秘密の質問」を設定してください。
             </div>
-            
             <input type="password" id="new-master-pass" placeholder="Password (8-16 chars)" class="lock-input">
-            <select id="secret-q" style="margin-bottom:15px; background:#222; color:#fff; border:1px solid #444;">
-                <option value="mom">母親の旧姓は？</option>
-                <option value="pet">最初のペットの名前は？</option>
-                <option value="school">小学校の名前は？</option>
-                <option value="food">好きな食べ物は？</option>
+            <select id="secret-q" style="margin-bottom:15px; width:100%; padding:10px; background:#333; color:white; border:1px solid #444;">
+                <option value="mom">母親の旧姓は？</option><option value="pet">最初のペットの名前は？</option><option value="school">小学校の名前は？</option><option value="food">好きな食べ物は？</option>
             </select>
             <input type="text" id="secret-a" placeholder="Answer (Secret Question)" class="lock-input">
-            
             <button class="btn-main btn-gen" onclick="setupApp()">設定して開始</button>
-            
             <div style="margin-top:30px; border-top:1px solid #333; padding-top:20px;">
                 <p style="color:#888; font-size:0.8em;">機種変更・データ復旧の方はこちら</p>
                 <button class="btn-restore" onclick="triggerRestore()">📂 バックアップファイルから復元</button>
@@ -186,10 +187,7 @@
             <p style="color:#aaa;">Enter Master Password</p>
             <input type="password" id="input-master-pass" placeholder="Password" class="lock-input">
             <button class="btn-main" style="background:#444;" onclick="unlockApp()">UNLOCK</button>
-            
-            <p style="margin-top:30px; color:#d9534f; font-size:0.8em; text-decoration:underline; cursor:pointer;" onclick="toRecoveryMode()">
-                パスワードを忘れましたか？
-            </p>
+            <p style="margin-top:30px; color:#d9534f; font-size:0.8em; text-decoration:underline; cursor:pointer;" onclick="toRecoveryMode()">パスワードを忘れましたか？</p>
         </div>
 
         <div id="recovery-mode" style="display:none;">
@@ -203,17 +201,11 @@
 </div>
 
 <div id="app-screen" class="container" style="display:none;">
-    
     <div class="app-header">
         <h3 class="header-title">MY WALLET</h3>
         <button class="help-btn" onclick="openHelp()">?</button>
     </div>
-
-    <div class="warning-box no-print">
-        ⚠️ <strong>データ消失注意</strong><br>
-        ブラウザの履歴削除でデータが消えます。<br>
-        こまめに <strong>[JSONバックアップ]</strong> を保存してください。
-    </div>
+    <div class="warning-box no-print">⚠️ <strong>データ消失注意</strong><br>ブラウザの履歴削除でデータが消えます。<br>こまめに <strong>[JSONバックアップ]</strong> を保存してください。</div>
 
     <div class="tab-container no-print">
         <button class="tab-btn active" id="tab-web" onclick="switchTab('web')">Web</button>
@@ -223,16 +215,9 @@
 
     <div class="card no-print">
         <h3>NEW ENTRY</h3>
-        <div class="input-group">
-            <label id="lbl-name">SERVICE NAME <span class="en">名称</span></label>
-            <input type="text" id="service-name" placeholder="Amazon, Google...">
-        </div>
-        <div class="input-group">
-            <label id="lbl-id">ID / USERNAME <span class="en">ID</span></label>
-            <input type="text" id="service-id" list="id-history" placeholder="Tap for history">
-            <datalist id="id-history"></datalist>
-        </div>
-
+        <div class="input-group"><label id="lbl-name">SERVICE NAME <span class="en">名称</span></label><input type="text" id="service-name" placeholder="Amazon, Google..."></div>
+        <div class="input-group"><label id="lbl-id">ID / USERNAME <span class="en">ID</span></label><input type="text" id="service-id" list="id-history" placeholder="Tap for history"><datalist id="id-history"></datalist></div>
+        
         <label>OPTIONS <span class="en">生成設定</span></label>
         <div class="options">
             <label><input type="checkbox" id="use-upper" checked> ABC</label>
@@ -240,8 +225,7 @@
             <label><input type="checkbox" id="use-number" checked> 123</label>
             <label><input type="checkbox" id="use-symbol"> #$%</label>
             <div style="width:100%; margin-top:10px; display:flex; gap:10px; color:#ddd; align-items:center;">
-                <span>Length:</span>
-                <input type="range" id="pass-length" min="4" max="32" value="12" style="flex:1;" oninput="document.getElementById('len-val').innerText=this.value">
+                <span>Length:</span><input type="range" id="pass-length" min="4" max="32" value="12" style="flex:1;" oninput="document.getElementById('len-val').innerText=this.value">
                 <span id="len-val" style="font-weight:bold; width:25px;">12</span>
             </div>
         </div>
@@ -255,11 +239,7 @@
 
     <div style="margin-top:40px;" class="no-print">
         <h3 style="border-bottom:1px solid #444; padding-bottom:10px; color:#777;">TOOLS</h3>
-        <div class="action-buttons">
-            <button class="btn-sub" onclick="shareData()">📤 CSV Export</button>
-            <button class="btn-sub" onclick="window.print()">🖨️ Print / PDF</button>
-        </div>
-        
+        <div class="action-buttons"><button class="btn-sub" onclick="shareData()">📤 CSV Export</button><button class="btn-sub" onclick="window.print()">🖨️ Print / PDF</button></div>
         <button class="btn-main btn-backup" onclick="downloadBackup()">💾 JSONバックアップ保存</button>
         <button class="btn-restore" onclick="triggerRestore()">📂 バックアップ読み込み（復元）</button>
     </div>
@@ -268,33 +248,23 @@
 <input type="file" id="restore-file" class="hidden-file" accept=".json" onchange="restoreFromFile(this)">
 
 <script>
-    /* === PassCard Metal V8 Logic === */
     const KEY_PIN = 'passCardV8_PIN'; 
     const KEY_QA  = 'passCardV8_QA';  
     const KEY_DATA= 'passCardV8_Data';   
     const KEY_QID = 'passCardV8_QID';
-    const KEY_INIT= 'passCardV8_InitHelp'; // 初回ヘルプ表示フラグ
-    
-    let currentRealKey = null; 
-    let currentTab = 'web';
+    const KEY_INIT= 'passCardV8_InitHelp';
+    let currentRealKey = null; let currentTab = 'web';
 
     window.onload = function() {
         if (typeof CryptoJS === 'undefined') { alert("Offline Mode: Encryption Library Missing.\nPlease connect to internet."); return; }
         checkState();
     };
 
-    /* --- Core Security --- */
     function encrypt(txt, pass) { return CryptoJS.AES.encrypt(txt, pass).toString(); }
-    function decrypt(txt, pass) {
-        try {
-            const bytes = CryptoJS.AES.decrypt(txt, pass);
-            return bytes.toString(CryptoJS.enc.Utf8);
-        } catch(e) { return ""; }
-    }
+    function decrypt(txt, pass) { try { const bytes = CryptoJS.AES.decrypt(txt, pass); return bytes.toString(CryptoJS.enc.Utf8); } catch(e) { return ""; } }
     function genKey() { return Math.random().toString(36).substring(2) + Math.random().toString(36).substring(2); }
     function validatePass(val) { return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{}|;:,.<>?]).{8,16}$/.test(val); }
 
-    /* --- Initialization --- */
     function checkState() {
         if (localStorage.getItem(KEY_PIN)) {
             document.getElementById('setup-mode').style.display = 'none';
@@ -302,20 +272,16 @@
         } else {
             document.getElementById('setup-mode').style.display = 'block';
             document.getElementById('unlock-mode').style.display = 'none';
-            // 初回なのでヘルプを出す
             if(!localStorage.getItem(KEY_INIT)) openHelp(); 
         }
     }
 
-    /* --- Actions --- */
     function setupApp() {
         const pin = document.getElementById('new-master-pass').value;
         const q = document.getElementById('secret-q').value;
         const a = document.getElementById('secret-a').value;
-
         if(!validatePass(pin)) { showModal("パスワード条件を満たしていません。\n8〜16文字、大文字・小文字・数字・記号を含めてください。"); return; }
         if(!a) { showModal("秘密の質問の答えを入力してください。"); return; }
-
         showModal("設定しますか？\n(紛失防止のためメモを推奨)", true, function(){
             const realKey = genKey(); currentRealKey = realKey;
             localStorage.setItem(KEY_PIN, encrypt(realKey, pin));
@@ -331,21 +297,17 @@
         const input = document.getElementById('input-master-pass').value;
         const wrapped = localStorage.getItem(KEY_PIN);
         const key = decrypt(wrapped, input);
-        
         if(key) {
             currentRealKey = key;
             document.getElementById('lock-screen').style.display = 'none';
             document.getElementById('app-screen').style.display = 'block';
             renderList(); updateIdList();
-            
-            // 初回ヘルプ（データが無い場合など）
             if(!localStorage.getItem(KEY_INIT)) openHelp();
         } else {
             showModal("Password Incorrect"); document.getElementById('input-master-pass').value = "";
         }
     }
 
-    /* --- Recovery --- */
     function toRecoveryMode() {
         document.getElementById('unlock-mode').style.display = 'none';
         document.getElementById('recovery-mode').style.display = 'block';
@@ -367,7 +329,6 @@
         } else { showModal("答えが違います..."); }
     }
 
-    /* --- Data Handling --- */
     function getList() {
         if(!currentRealKey) return [];
         const encData = localStorage.getItem(KEY_DATA);
@@ -391,14 +352,9 @@
         renderList(); updateIdList(); showModal("Saved!");
     }
 
-    /* --- Backup & Restore (Fixed) --- */
     async function downloadBackup() {
-        const dump = { 
-            pin: localStorage.getItem(KEY_PIN), qa: localStorage.getItem(KEY_QA), 
-            data: localStorage.getItem(KEY_DATA), qid: localStorage.getItem(KEY_QID) 
-        };
+        const dump = { pin: localStorage.getItem(KEY_PIN), qa: localStorage.getItem(KEY_QA), data: localStorage.getItem(KEY_DATA), qid: localStorage.getItem(KEY_QID) };
         const file = new File([JSON.stringify(dump)], "passcard_v8_backup.json", {type: "application/json"});
-        
         if (navigator.canShare && navigator.canShare({ files: [file] })) {
             try { await navigator.share({ files: [file], title: 'PassCard Backup' }); } 
             catch (e) { saveFileFallback(file); }
@@ -410,10 +366,9 @@
         showModal("バックアップファイルを保存しました。\n安全な場所に保管してください。");
     }
 
-    // Trigger Hidden Input
     function triggerRestore() {
         const input = document.getElementById('restore-file');
-        input.value = ''; // 【重要】ここがバグ修正ポイント！同じファイルでも発火させる
+        input.value = ''; // Reset value to force change event
         input.click();
     }
 
@@ -436,20 +391,16 @@
         reader.readAsText(file);
     }
 
-    /* --- UI & Helpers --- */
     function renderList() {
         const list = getList();
         const filtered = list.filter(item => { const cat = item.category || 'web'; return cat === currentTab; });
         const container = document.getElementById('list-container'); container.innerHTML = "";
-        
         filtered.sort((a, b) => (a.pinned === b.pinned) ? a.service.localeCompare(b.service) : (a.pinned ? -1 : 1));
-
         filtered.forEach((item) => {
-            const idx = list.indexOf(item); // リアルインデックス
+            const idx = list.indexOf(item); 
             const init = item.service.charAt(0).toUpperCase() || "?";
             const pinCol = item.pinned ? "#ffc107" : "#555";
             const pinCls = item.pinned ? "pinned" : "";
-            
             container.innerHTML += `
             <div class="item-card ${pinCls}">
                 <div class="item-header">
@@ -473,7 +424,6 @@
         currentTab = tab;
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
         document.getElementById('tab-'+tab).classList.add('active');
-        
         const map = {
             'web': {l1:'SERVICE NAME', p1:'Amazon, Google...', l2:'ID / EMAIL', p2:'email@example.com'},
             'app': {l1:'APP NAME', p1:'LINE, Instagram...', l2:'ID / USERNAME', p2:'User ID'},
@@ -483,7 +433,6 @@
         document.getElementById('service-name').placeholder = map[tab].p1;
         document.getElementById('lbl-id').innerHTML = map[tab].l2 + ' <span class="en">ID</span>';
         document.getElementById('service-id').placeholder = map[tab].p2;
-        
         renderList();
     }
 
