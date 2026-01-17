@@ -5,20 +5,22 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>PassCard Metal</title>
 <style>
-    /* --- 全体設定 --- */
+    /* --- 1. スマホ・レイアウト崩れ防止の基礎設定 --- */
     body {
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
         background-color: #121212; /* Deep Black */
         color: #e0e0e0;
         margin: 0;
         padding: 20px 10px;
-        box-sizing: border-box;
+        box-sizing: border-box; /* パディングを含めた幅計算 */
+        overflow-x: hidden; /* 横スクロール防止 */
+        padding-bottom: 80px;
     }
 
     h2, h3 { margin: 0; font-weight: 700; letter-spacing: 0.05em; }
 
     /* --- コンテナ --- */
-    .container { max-width: 500px; margin: 0 auto; padding-bottom: 60px; }
+    .container { max-width: 500px; margin: 0 auto; width: 100%; }
 
     /* --- メタルカードデザイン --- */
     .card {
@@ -45,7 +47,9 @@
         background: #f0f0f0; color: #111;
         border: 2px solid #ccc; border-radius: 6px;
         font-size: 1em; font-weight: 500;
-        box-sizing: border-box; outline: none;
+        box-sizing: border-box; /* はみ出し防止 */
+        outline: none;
+        appearance: none; /* iOSのデフォルトスタイル解除 */
     }
     input:focus { border-color: #007bff; background: #fff; }
 
@@ -91,70 +95,101 @@
     .logo-circle {
         width: 42px; height: 42px; background: #555; color: #fff;
         border-radius: 50%; display: flex; align-items: center; justify-content: center;
-        font-weight: bold; font-size: 1.2em; margin-right: 12px;
+        font-weight: bold; font-size: 1.2em; margin-right: 12px; flex-shrink: 0;
     }
-    .service-name { font-size: 1.1em; font-weight: bold; color: #fff; }
+    .service-name { font-size: 1.1em; font-weight: bold; color: #fff; word-break: break-all; }
 
     .data-row {
         background: #1a1a1a; padding: 12px; border-radius: 6px;
         margin-bottom: 10px; font-family: monospace; font-size: 1.1em;
         display: flex; justify-content: space-between; align-items: center;
-        border: 1px solid #333;
+        border: 1px solid #333; cursor: pointer;
     }
+    .data-row:active { background: #333; }
     .data-label { font-size: 0.75em; color: #888; margin-bottom: 4px; display: flex; justify-content: space-between;}
     
     /* --- ロック画面 --- */
     #lock-screen {
         position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-        background: #121212; z-index: 9999;
+        background: #121212; z-index: 9000;
         display: flex; flex-direction: column; justify-content: center; align-items: center;
+        padding: 20px; box-sizing: border-box;
     }
     .lock-input {
         text-align:center; letter-spacing: 5px; margin-bottom: 20px; 
         background:#333 !important; color:white !important; border:none !important;
     }
 
+    /* --- カスタムモーダル（Metal仕様） --- */
+    #custom-modal-overlay {
+        display: none;
+        position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+        background: rgba(0,0,0,0.8); z-index: 10000;
+        justify-content: center; align-items: center;
+        backdrop-filter: blur(5px);
+    }
+    #custom-modal {
+        background: #252525; padding: 25px; width: 85%; max-width: 400px;
+        border-radius: 16px; text-align: center; box-shadow: 0 10px 30px rgba(0,0,0,0.7);
+        border: 1px solid #444; color: #fff;
+    }
+    #modal-msg { font-size: 1.1em; margin-bottom: 25px; font-weight: bold; line-height: 1.5; }
+    .modal-btn-row { display: flex; gap: 10px; justify-content: center; }
+    .btn-modal { padding: 12px; font-size: 1em; margin: 0; width: 100%; border-radius: 8px; }
+    .btn-modal-ok { background: #007bff; color: white; border: none; }
+    .btn-modal-cancel { background: #444; color: #ddd; border: 1px solid #666; }
+
     /* トースト */
     #toast {
         visibility: hidden; min-width: 200px; background-color: #333; color: #fff;
         text-align: center; border-radius: 50px; padding: 12px 20px;
-        position: fixed; z-index: 10000; bottom: 30px; left: 50%; transform: translateX(-50%);
-        box-shadow: 0 5px 15px rgba(0,0,0,0.5); font-weight: bold;
+        position: fixed; z-index: 10001; bottom: 30px; left: 50%; transform: translateX(-50%);
+        box-shadow: 0 5px 15px rgba(0,0,0,0.5); font-weight: bold; border: 1px solid #555;
     }
     #toast.show { visibility: visible; opacity: 1; }
 
     /* 印刷設定 */
     @media print {
-        body { background: white; color: black; }
-        .card, .btn-gen, .btn-save, .action-buttons, .pin-icon, .btn-del, header, .options { display: none; }
-        .item-card { border: 1px solid #ccc; background: white; color: black; box-shadow: none; break-inside: avoid; }
+        body { background: white; color: black; padding: 0; }
+        .card, .btn-gen, .btn-save, .action-buttons, .pin-icon, .btn-del, header, .options, #toast, .no-print { display: none !important; }
+        .item-card { border: 1px solid #ccc; background: white; color: black; box-shadow: none; break-inside: avoid; margin-bottom: 10px; }
         .data-row { background: #eee; border: 1px solid #ddd; color: black; }
-        .masked-pass { display: none; }
+        .logo-circle { background: #333; color: white !important; -webkit-print-color-adjust: exact; }
+        .masked-pass { display: none !important; }
+        .print-show { display: inline !important; }
     }
 
 </style>
 </head>
 <body>
 
-<div id="toast">コピーしました！</div>
+<div id="custom-modal-overlay">
+    <div id="custom-modal">
+        <div id="modal-msg">MESSAGE</div>
+        <div class="modal-btn-row" id="modal-btns">
+            </div>
+    </div>
+</div>
+
+<div id="toast">Copied to clipboard</div>
 
 <div id="lock-screen">
-    <div style="text-align:center;">
+    <div style="text-align:center; width: 100%; max-width: 320px;">
         <h2 style="color:#fff; font-size:2em; margin-bottom:10px;">PassCard</h2>
         <p style="color:#777; margin-bottom: 30px;">Metal Edition</p>
         
-        <div id="setup-mode" style="display:none; width: 300px;">
-            <p style="color:#aaa; font-size:0.9em;">初期設定: マスターパスワードを決めてください</p>
+        <div id="setup-mode" style="display:none;">
+            <p style="color:#aaa; font-size:0.9em; margin-bottom:10px;">Create Master Password</p>
             <input type="password" id="new-master-pass" placeholder="Password" class="lock-input">
             <button onclick="setMasterPass()" style="background:#007bff;">START</button>
         </div>
 
-        <div id="unlock-mode" style="display:none; width: 300px;">
+        <div id="unlock-mode" style="display:none;">
             <input type="password" id="input-master-pass" placeholder="Password" class="lock-input">
             <button onclick="unlockApp()" style="background:#444;">UNLOCK</button>
             
             <p style="margin-top:40px; color:#d9534f; font-size:0.8em; text-decoration:underline; cursor:pointer;" onclick="resetApp()">
-                パスワードを忘れましたか？<br>(全データ削除してリセット)
+                Forgot Password?<br>(Reset All Data)
             </p>
         </div>
     </div>
@@ -211,21 +246,53 @@
 </div>
 
 <script>
-    /* --- 1. ロック & セットアップ機能 --- */
+    /* --- 1. モーダル機能 (URL非表示対応) --- */
+    function showModal(msg, isConfirm = false, yesCallback = null) {
+        const overlay = document.getElementById('custom-modal-overlay');
+        const msgDiv = document.getElementById('modal-msg');
+        const btnsDiv = document.getElementById('modal-btns');
+
+        msgDiv.innerHTML = msg.replace(/\n/g, '<br>');
+        btnsDiv.innerHTML = "";
+
+        if (isConfirm) {
+            // Confirmタイプ (Yes/No)
+            const btnYes = document.createElement('button');
+            btnYes.className = 'btn-modal btn-modal-ok';
+            btnYes.innerText = 'YES';
+            btnYes.onclick = function() { overlay.style.display = 'none'; if(yesCallback) yesCallback(); };
+            
+            const btnNo = document.createElement('button');
+            btnNo.className = 'btn-modal btn-modal-cancel';
+            btnNo.innerText = 'NO';
+            btnNo.onclick = function() { overlay.style.display = 'none'; };
+
+            btnsDiv.appendChild(btnNo);
+            btnsDiv.appendChild(btnYes);
+        } else {
+            // Alertタイプ (OKのみ)
+            const btnOk = document.createElement('button');
+            btnOk.className = 'btn-modal btn-modal-ok';
+            btnOk.innerText = 'OK';
+            btnOk.onclick = function() { overlay.style.display = 'none'; };
+            btnsDiv.appendChild(btnOk);
+        }
+        overlay.style.display = 'flex';
+    }
+
+
+    /* --- 2. ロック & セットアップ機能 --- */
     const MASTER_KEY = 'passCard_MasterKey'; // パスワード保存用
     const DATA_KEY = 'passCardData_v3';      // データ保存用
 
-    // 起動時にチェック
     checkFirstRun();
 
     function checkFirstRun() {
         const savedPass = localStorage.getItem(MASTER_KEY);
         if (!savedPass) {
-            // 初回: セットアップ画面
             document.getElementById('setup-mode').style.display = 'block';
             document.getElementById('unlock-mode').style.display = 'none';
         } else {
-            // 2回目以降: ロック画面
             document.getElementById('setup-mode').style.display = 'none';
             document.getElementById('unlock-mode').style.display = 'block';
         }
@@ -233,13 +300,16 @@
 
     function setMasterPass() {
         const val = document.getElementById('new-master-pass').value;
-        if(val.length < 4) { alert("セキュリティのため、4文字以上で設定してください"); return; }
+        if(val.length < 4) { showModal("Security Alert:\nPlease set at least 4 characters."); return; }
         
-        if(confirm("パスワードは「" + val + "」でよろしいですか？\n忘れると二度と開けません。")) {
+        showModal("Set Password to: " + val + "?\n(Cannot be recovered if lost)", true, function(){
             localStorage.setItem(MASTER_KEY, val);
-            alert("設定完了！");
-            location.reload(); // リロードしてロック画面へ
-        }
+            // 完了メッセージ後にリロード
+            showModal("Setup Complete!", false, function(){
+                 location.reload(); 
+            });
+            setTimeout(() => location.reload(), 1500);
+        });
     }
 
     function unlockApp() {
@@ -249,26 +319,26 @@
         if (input === saved) {
             document.getElementById('lock-screen').style.display = 'none';
             document.getElementById('app-screen').style.display = 'block';
-            loadData(); // データ読み込み開始
+            loadData(); 
         } else {
-            alert("パスワードが違います");
+            showModal("Wrong Password");
             document.getElementById('input-master-pass').value = "";
         }
     }
 
     function resetApp() {
-        if(confirm("【警告】\nパスワードを忘れた場合、セキュリティ保護のためデータを全消去（初期化）する必要があります。\n\n本当に実行しますか？")) {
-            if(confirm("【最終確認】\n保存されたパスワードは全て消えます。\n復元はできません。\n\nよろしいですか？")) {
+        showModal("WARNING:\nResetting will DELETE ALL DATA.\nAre you sure?", true, function(){
+            showModal("FINAL WARNING:\nData cannot be restored.\nDelete everything?", true, function(){
                 localStorage.removeItem(MASTER_KEY);
                 localStorage.removeItem(DATA_KEY);
-                alert("初期化されました。新しいパスワードを設定してください。");
+                alert("Reset Complete."); // 最後だけalert許容(リロード直前)
                 location.reload();
-            }
-        }
+            });
+        });
     }
 
 
-    /* --- 2. アプリ基本機能 --- */
+    /* --- 3. アプリ基本機能 --- */
     function generatePassword() {
         const len = document.getElementById('pass-length').value;
         const chars = [
@@ -278,7 +348,7 @@
             document.getElementById('use-symbol').checked ? "!@#$%^&*()_+-=[]{}|;:,.<>?" : ""
         ].join("");
 
-        if (!chars) { alert("文字種を選んでください"); return; }
+        if (!chars) { showModal("Please select at least one character type."); return; }
 
         let password = "";
         for (let i = 0; i < len; i++) {
@@ -292,7 +362,7 @@
         const id = document.getElementById('service-id').value;
         const pass = document.getElementById('generated-pass').value;
         
-        if (!service || !pass) { alert("Service Name and Password required."); return; }
+        if (!service || !pass) { showModal("Service Name and Password required."); return; }
 
         const newData = { 
             service, id, pass, 
@@ -308,7 +378,7 @@
         document.getElementById('service-id').value = "";
         document.getElementById('generated-pass').value = "";
         renderList();
-        showToast("Added to Wallet");
+        showModal("Saved to Wallet!");
     }
 
     function renderList() {
@@ -331,7 +401,7 @@
             const html = `
             <div class="item-card ${pinClass}">
                 <div class="item-header">
-                    <div style="display:flex; align-items:center;">
+                    <div style="display:flex; align-items:center; max-width:85%;">
                         <div class="logo-circle">${initial}</div>
                         <div class="service-name">${item.service}</div>
                     </div>
@@ -362,7 +432,7 @@
 
     function shareData() {
         const list = JSON.parse(localStorage.getItem(DATA_KEY)) || [];
-        if (list.length === 0) { alert("No Data"); return; }
+        if (list.length === 0) { showModal("No Data"); return; }
 
         let csvContent = "Service,ID,Password,Date\n";
         list.forEach(item => {
@@ -412,15 +482,15 @@
     function loadData() { renderList(); }
     
     function deleteData(index) {
-        if(confirm('Delete this card?')) {
+        showModal("Delete this card?", true, function(){
             let list = JSON.parse(localStorage.getItem(DATA_KEY)) || [];
             list.splice(index, 1);
             localStorage.setItem(DATA_KEY, JSON.stringify(list));
             renderList();
-        }
+        });
     }
 
-    /* 印刷時の処理（マスク解除用） */
+    /* 印刷時の処理 */
     window.onbeforeprint = function() {
         document.querySelectorAll('.masked-pass').forEach(e => e.style.display = 'none');
         document.querySelectorAll('.print-show').forEach(e => e.style.display = 'inline');
