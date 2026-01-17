@@ -3,28 +3,36 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>PassCard Metal V5 (AES)</title>
+<title>PassCard Metal V6 (Ultimate)</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 <style>
     /* --- 基本設定 --- */
     body {
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
         background-color: #121212; color: #e0e0e0;
         margin: 0; padding: 20px 10px; box-sizing: border-box; 
-        overflow-x: hidden; padding-bottom: 80px;
+        overflow-x: hidden; padding-bottom: 100px;
     }
     h2, h3 { margin: 0; font-weight: 700; letter-spacing: 0.05em; }
 
     /* --- コンテナ --- */
     .container { max-width: 500px; margin: 0 auto; width: 100%; }
 
-    /* --- 警告エリア (データ消失リスク) --- */
+    /* --- 警告エリア --- */
     .warning-box {
         background: rgba(217, 83, 79, 0.15); border: 1px solid #d9534f;
         color: #ffadad; padding: 15px; border-radius: 8px; font-size: 0.85em;
         margin-bottom: 20px; line-height: 1.5;
     }
-    .warning-title { color: #d9534f; font-weight: bold; display: flex; align-items: center; gap: 5px; margin-bottom: 5px; }
+    .warning-title { color: #d9534f; font-weight: bold; margin-bottom: 5px; }
+
+    /* --- カードデザイン --- */
+    .card {
+        background: linear-gradient(135deg, #3a3a3a, #222);
+        border: 1px solid #555; border-top: 1px solid #777;
+        border-radius: 16px; padding: 20px; margin-bottom: 25px;
+        box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+    }
 
     /* --- タブ --- */
     .tab-container {
@@ -38,20 +46,12 @@
     }
     .tab-btn.active { background: #007bff; color: white; box-shadow: 0 4px 10px rgba(0,123,255,0.4); }
 
-    /* --- カード --- */
-    .card {
-        background: linear-gradient(135deg, #3a3a3a, #222);
-        border: 1px solid #555; border-top: 1px solid #777;
-        border-radius: 16px; padding: 20px; margin-bottom: 25px;
-        box-shadow: 0 10px 20px rgba(0,0,0,0.5);
-    }
-
-    /* --- フォーム --- */
+    /* --- 入力フォーム --- */
     .input-group { margin-bottom: 15px; }
     label { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 0.85em; color: #ccc; font-weight: bold; }
     label span.en { font-weight: normal; color: #777; font-size: 0.9em; }
 
-    input[type="text"], input[type="password"], input[type="number"] {
+    input[type="text"], input[type="password"], input[type="number"], select {
         width: 100%; padding: 12px; background: #f0f0f0; color: #111;
         border: 2px solid #ccc; border-radius: 6px; font-size: 1em; font-weight: 500;
         box-sizing: border-box; outline: none; appearance: none;
@@ -76,6 +76,7 @@
     button:active { transform: scale(0.97); }
     .btn-gen { background: linear-gradient(to right, #007bff, #0056b3); }
     .btn-save { background: linear-gradient(to right, #28a745, #1e7e34); }
+    .btn-backup { background: linear-gradient(to right, #d35400, #e67e22); }
     
     .action-buttons { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 20px; }
     .btn-sub { 
@@ -148,9 +149,11 @@
     }
     #toast.show { visibility: visible; opacity: 1; }
 
+    #restore-file { display: none; }
+
     @media print {
         body { background: white; color: black; padding: 0; }
-        .card, .btn-gen, .btn-save, .action-buttons, .pin-icon, .btn-del, header, .options, #toast, .no-print, .tab-container, .warning-box { display: none !important; }
+        .card, .btn-gen, .btn-save, .action-buttons, .pin-icon, .btn-del, header, .options, #toast, .no-print, .tab-container, .warning-box, .btn-backup { display: none !important; }
         .item-card { border: 1px solid #ccc; background: white; color: black; box-shadow: none; break-inside: avoid; margin-bottom: 10px; }
         .data-row { background: #eee; border: 1px solid #ddd; color: black; }
         .logo-circle { background: #333; color: white !important; -webkit-print-color-adjust: exact; }
@@ -173,30 +176,52 @@
 <div id="lock-screen">
     <div style="text-align:center; width: 100%; max-width: 350px;">
         <h2 style="color:#fff; font-size:2em; margin-bottom:10px;">PassCard</h2>
-        <p style="color:#777; margin-bottom: 20px;">Metal Edition V5 (AES)</p>
+        <p style="color:#777; margin-bottom: 20px;">Metal V6 (Ultimate)</p>
         
         <div id="setup-mode" style="display:none;">
             <h3 style="color:#007bff; margin-bottom:15px; border-bottom:1px solid #333; padding-bottom:10px;">マスターパスワード設定</h3>
+            
             <div class="lock-msg">
-                ⚠️ <strong>【重要】セキュリティについて</strong><br>
-                データはあなたのパスワードで<strong>暗号化</strong>されます。<br>
-                パスワードを紛失すると、データは数学的に復元不可能になります。
+                ⚠️ <strong>【重要】</strong><br>
+                パスワードを忘れた時のために、「秘密の質問」も合わせて設定します。
             </div>
+
             <ul class="rule-list">
                 <li>8〜16文字</li>
                 <li>大文字・小文字・数字・記号 を各1文字以上</li>
             </ul>
-            <input type="password" id="new-master-pass" placeholder="パスワードを入力" class="lock-input">
-            <button onclick="setMasterPass()" style="background:#007bff;">設定して暗号化開始</button>
+            <input type="password" id="new-master-pass" placeholder="Master Password" class="lock-input">
+
+            <select id="secret-q" style="margin-bottom:15px; width:100%; padding:10px; background:#333; color:white; border:none; border-radius:6px;">
+                <option value="mom">母親の旧姓は？</option>
+                <option value="pet">最初のペットの名前は？</option>
+                <option value="school">小学校の名前は？</option>
+                <option value="food">好きな食べ物は？</option>
+            </select>
+            <input type="text" id="secret-a" placeholder="Secret Answer (Hiragana)" class="lock-input">
+
+            <button onclick="setupApp()" style="background:#007bff;">設定して暗号化開始</button>
+
+            <p style="margin-top:20px; font-size:0.8em; color:#888;">バックアップをお持ちですか？</p>
+            <button onclick="document.getElementById('restore-file').click()" class="btn-backup" style="font-size:0.9em; padding:10px;">Restore from JSON</button>
+            <input type="file" id="restore-file" accept=".json" onchange="restoreFromFile(this)">
         </div>
 
         <div id="unlock-mode" style="display:none;">
             <p style="color:#aaa; font-size:0.9em;">マスターパスワードを入力</p>
             <input type="password" id="input-master-pass" placeholder="Password" class="lock-input">
             <button onclick="unlockApp()" style="background:#444;">UNLOCK (Decrypt)</button>
-            <p style="margin-top:40px; color:#d9534f; font-size:0.8em; text-decoration:underline; cursor:pointer;" onclick="resetApp()">
-                パスワードを忘れましたか？<br>(リセット)
+            <p style="margin-top:40px; color:#d9534f; font-size:0.8em; text-decoration:underline; cursor:pointer;" onclick="toRecoveryMode()">
+                パスワードを忘れましたか？<br>(秘密の質問でリセット)
             </p>
+        </div>
+
+        <div id="recovery-mode" style="display:none;">
+            <h3 style="color:#28a745; margin-bottom:15px;">Recovery Mode</h3>
+            <p id="recovery-q-text" style="color:#fff; background:#333; padding:10px; border-radius:6px; margin-bottom:15px;">Question</p>
+            <input type="text" id="recovery-a" placeholder="Answer" class="lock-input">
+            <button onclick="checkRecovery()" style="background:#28a745;">Recover & Reset Pass</button>
+            <button onclick="backToUnlock()" style="background:#444;">Back</button>
         </div>
     </div>
 </div>
@@ -205,9 +230,8 @@
     
     <div class="warning-box">
         <div class="warning-title">⚠️ データ消失注意</div>
-        このデータはブラウザ内に保存されています。<br>
-        「履歴の削除」等を行うとデータが消えます。<br>
-        定期的に下の <strong>[Export]</strong> ボタンでバックアップを取ってください。
+        ブラウザの履歴削除でデータが消えます。<br>
+        定期的に下の <strong>[Backup JSON]</strong> でファイルを保存してください。
     </div>
 
     <div class="tab-container">
@@ -257,60 +281,35 @@
     </h3>
 
     <div class="action-buttons" id="action-btns">
-        <button onclick="shareData()" class="btn-sub"><span style="font-size:1.2em">📤</span> Export</button>
+        <button onclick="shareData()" class="btn-sub"><span style="font-size:1.2em">📤</span> CSV Export</button>
         <button onclick="window.print()" class="btn-sub"><span style="font-size:1.2em">🖨️</span> Print / PDF</button>
     </div>
+    
+    <button onclick="downloadBackup()" class="btn-backup" style="margin-bottom:20px;">💾 Backup JSON (Encrypted)</button>
 
     <div id="list-container"></div>
 </div>
 
 <script>
-    /* === セキュリティ仕様 (Metal V5) ===
-       1. Master PasswordはSHA256ハッシュとして保存 (verify用)
-       2. データリスト(JSON)はMaster Password(平文)でAES暗号化して保存
-       3. メモリ上(tempKey)でのみ平文パスワードを保持し、リロードで消滅
-    */
-
-    const MASTER_HASH_KEY = 'passCard_MasterHash'; 
-    const ENCRYPTED_DATA_KEY = 'passCard_EncryptedData';      
+    /* === PassCard V6 (Double Lock Logic) === */
+    const KEY_WRAPPED_PIN = 'passCardV6_KeyPIN'; 
+    const KEY_WRAPPED_QA  = 'passCardV6_KeyQA';  
+    const KEY_DATA_ENC    = 'passCardV6_Data';   
+    const KEY_Q_ID        = 'passCardV6_Q_ID';   
+    
+    let currentRealKey = null; 
     let currentTab = 'web';
-    let tempKey = null; // 復号用の一時キー（リロードで消える）
 
     window.onload = function() {
-        // 暗号化ライブラリのチェック
         if (typeof CryptoJS === 'undefined') {
-            alert("Error: Crypto-js library not loaded. Internet connection required.");
+            alert("Internet connection required for encryption.");
             return;
         }
-        checkFirstRun();
+        checkState();
     };
 
-    /* --- 暗号化・ハッシュ化関連 --- */
-    function hashPassword(pass) {
-        return CryptoJS.SHA256(pass).toString();
-    }
-
-    function encryptData(dataObject, key) {
-        const jsonStr = JSON.stringify(dataObject);
-        return CryptoJS.AES.encrypt(jsonStr, key).toString();
-    }
-
-    function decryptData(cipherText, key) {
-        try {
-            const bytes = CryptoJS.AES.decrypt(cipherText, key);
-            const decryptedStr = bytes.toString(CryptoJS.enc.Utf8);
-            if(!decryptedStr) return [];
-            return JSON.parse(decryptedStr);
-        } catch(e) {
-            console.error("Decrypt failed", e);
-            return [];
-        }
-    }
-
-    /* --- ロック画面 --- */
-    function checkFirstRun() {
-        const savedHash = localStorage.getItem(MASTER_HASH_KEY);
-        if (!savedHash) {
+    function checkState() {
+        if (!localStorage.getItem(KEY_WRAPPED_PIN)) {
             document.getElementById('setup-mode').style.display = 'block';
             document.getElementById('unlock-mode').style.display = 'none';
         } else {
@@ -319,41 +318,61 @@
         }
     }
 
-    function setMasterPass() {
-        const val = document.getElementById('new-master-pass').value;
+    /* --- Crypto Helpers --- */
+    function encrypt(txt, pass) { return CryptoJS.AES.encrypt(txt, pass).toString(); }
+    function decrypt(txt, pass) {
+        try {
+            const bytes = CryptoJS.AES.decrypt(txt, pass);
+            return bytes.toString(CryptoJS.enc.Utf8);
+        } catch(e) { return ""; }
+    }
+    function genKey() {
+        return Math.random().toString(36).substring(2) + Math.random().toString(36).substring(2);
+    }
+    // パスワードバリデーション
+    function validatePass(val) {
         const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{}|;:,.<>?]).{8,16}$/;
+        return regex.test(val);
+    }
 
-        if (!regex.test(val)) {
+    /* --- 1. Setup --- */
+    function setupApp() {
+        const pin = document.getElementById('new-master-pass').value;
+        const q = document.getElementById('secret-q').value;
+        const a = document.getElementById('secret-a').value;
+
+        if(!validatePass(pin)) {
             showModal("パスワード条件を満たしていません。\n8〜16文字、大文字・小文字・数字・記号を含めてください。");
             return;
         }
-        
-        showModal("このパスワードを設定しますか？\n" + val + "\n\n(重要：紛失すると復元不可)", true, function(){
-            // ハッシュ化して保存（検証用）
-            localStorage.setItem(MASTER_HASH_KEY, hashPassword(val));
-            // キーを一時保存
-            tempKey = val;
-            // 空のリストを暗号化して初期化
-            const emptyList = [];
-            localStorage.setItem(ENCRYPTED_DATA_KEY, encryptData(emptyList, tempKey));
+        if(!a) { showModal("Please enter Secret Answer."); return; }
 
-            showModal("暗号化設定完了！", false, function(){
-                 location.reload(); 
+        showModal("設定しますか？\n(紛失防止のためメモを推奨)", true, function(){
+            const realKey = genKey();
+            currentRealKey = realKey;
+
+            localStorage.setItem(KEY_WRAPPED_PIN, encrypt(realKey, pin));
+            localStorage.setItem(KEY_WRAPPED_QA, encrypt(realKey, a));
+            localStorage.setItem(KEY_Q_ID, q);
+            
+            saveList([]); // Init empty list
+
+            showModal("Setup Complete!", false, function(){
+                location.reload();
             });
         });
     }
 
+    /* --- 2. Unlock --- */
     function unlockApp() {
         const input = document.getElementById('input-master-pass').value;
-        const savedHash = localStorage.getItem(MASTER_HASH_KEY);
-        
-        // ハッシュで照合
-        if (hashPassword(input) === savedHash) {
-            tempKey = input; // 復号用にメモリに保持
+        const wrapped = localStorage.getItem(KEY_WRAPPED_PIN);
+        const key = decrypt(wrapped, input);
+        if(key) {
+            currentRealKey = key;
             document.getElementById('lock-screen').style.display = 'none';
             document.getElementById('app-screen').style.display = 'block';
-            
-            loadDataAndRender(); // 復号して表示
+            renderList();
             updateIdList();
         } else {
             showModal("Wrong Password");
@@ -361,62 +380,124 @@
         }
     }
 
-    function resetApp() {
-        showModal("【警告】\nリセットすると全てのデータが削除されます。\n本当によろしいですか？", true, function(){
-            showModal("【最終確認】\n実行しますか？", true, function(){
-                localStorage.removeItem(MASTER_HASH_KEY);
-                localStorage.removeItem(ENCRYPTED_DATA_KEY);
-                alert("リセットしました。");
+    /* --- 3. Recovery --- */
+    function toRecoveryMode() {
+        document.getElementById('unlock-mode').style.display = 'none';
+        document.getElementById('recovery-mode').style.display = 'block';
+        const qMap = { "mom":"母親の旧姓は？", "pet":"最初のペットの名前は？", "school":"小学校の名前は？", "food":"好きな食べ物は？" };
+        const qID = localStorage.getItem(KEY_Q_ID);
+        document.getElementById('recovery-q-text').innerText = qMap[qID] || "Question";
+    }
+
+    function backToUnlock() {
+        document.getElementById('recovery-mode').style.display = 'none';
+        document.getElementById('unlock-mode').style.display = 'block';
+    }
+
+    function checkRecovery() {
+        const inputA = document.getElementById('recovery-a').value;
+        const wrapped = localStorage.getItem(KEY_WRAPPED_QA);
+        const key = decrypt(wrapped, inputA);
+        
+        if(key) {
+            currentRealKey = key; // Recovered!
+            // Prompt for new password immediately
+            const newPin = prompt("Recovery Successful!\nEnter NEW Master Password (8-16 chars, Mixed case/symbol):", "");
+            if(newPin && validatePass(newPin)) {
+                localStorage.setItem(KEY_WRAPPED_PIN, encrypt(key, newPin));
+                alert("Password Updated! Please login with new password.");
                 location.reload();
-            });
-        });
+            } else {
+                alert("Invalid Password format or Cancelled.\nPlease try again.");
+            }
+        } else {
+            showModal("Wrong Answer...");
+        }
     }
 
-    /* --- データ操作 (常に暗号化/復号を伴う) --- */
-    function getDecryptedList() {
-        if (!tempKey) return [];
-        const cipherText = localStorage.getItem(ENCRYPTED_DATA_KEY);
-        if (!cipherText) return [];
-        return decryptData(cipherText, tempKey);
+    /* --- Data Logic --- */
+    function getList() {
+        if(!currentRealKey) return [];
+        const encData = localStorage.getItem(KEY_DATA_ENC);
+        if(!encData) return [];
+        try {
+            const json = decrypt(encData, currentRealKey);
+            return JSON.parse(json);
+        } catch(e) { return []; }
     }
 
-    function saveListEncrypted(list) {
-        if (!tempKey) return;
-        const cipherText = encryptData(list, tempKey);
-        localStorage.setItem(ENCRYPTED_DATA_KEY, cipherText);
+    function saveList(list) {
+        if(!currentRealKey) return;
+        const json = JSON.stringify(list);
+        localStorage.setItem(KEY_DATA_ENC, encrypt(json, currentRealKey));
     }
 
     function saveData() {
         const service = document.getElementById('service-name').value;
         const id = document.getElementById('service-id').value;
         const pass = document.getElementById('generated-pass').value;
-        
         if (!service || !pass) { showModal("Name and Password required."); return; }
 
-        const newData = { 
+        const list = getList();
+        list.push({ 
             service, id, pass, 
             date: new Date().toLocaleDateString('ja-JP'),
             pinned: false,
             category: currentTab 
-        };
-        
-        // 復号 -> 追加 -> 暗号化して保存
-        let list = getDecryptedList();
-        list.push(newData);
-        saveListEncrypted(list);
-        
+        });
+        saveList(list);
+
         document.getElementById('service-name').value = "";
         document.getElementById('service-id').value = "";
         document.getElementById('generated-pass').value = "";
         
-        renderList(list);
+        renderList();
         updateIdList();
         showModal("Encrypted & Saved!");
     }
 
-    function renderList(list = null) {
-        if(!list) list = getDecryptedList();
+    /* --- Backup / Restore --- */
+    function downloadBackup() {
+        const dump = {
+            pin: localStorage.getItem(KEY_WRAPPED_PIN),
+            qa:  localStorage.getItem(KEY_WRAPPED_QA),
+            data: localStorage.getItem(KEY_DATA_ENC),
+            qid: localStorage.getItem(KEY_Q_ID)
+        };
+        const blob = new Blob([JSON.stringify(dump)], {type: "application/json"});
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = "passcard_metal_backup.json";
+        a.click();
+        showModal("Backup file saved.");
+    }
 
+    function restoreFromFile(input) {
+        const file = input.files[0];
+        if(!file) return;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const dump = JSON.parse(e.target.result);
+                if(dump.pin && dump.data) {
+                    if(confirm("Restore data from file?\nCurrent data will be overwritten.")) {
+                        localStorage.setItem(KEY_WRAPPED_PIN, dump.pin);
+                        localStorage.setItem(KEY_WRAPPED_QA, dump.qa);
+                        localStorage.setItem(KEY_DATA_ENC, dump.data);
+                        localStorage.setItem(KEY_Q_ID, dump.qid);
+                        alert("Restore Complete. Please Login.");
+                        location.reload();
+                    }
+                } else { alert("Invalid backup file."); }
+            } catch(err) { alert("File Read Error"); }
+        };
+        reader.readAsText(file);
+    }
+
+    /* --- UI Logic --- */
+    function renderList() {
+        let list = getList();
         const container = document.getElementById('list-container');
         container.innerHTML = "";
 
@@ -433,7 +514,7 @@
         });
 
         filteredList.forEach((item) => {
-            const realIndex = list.indexOf(item); // 元リストでのインデックス
+            const realIndex = list.indexOf(item);
             const initial = item.service.charAt(0).toUpperCase() || "?";
             const pinColor = item.pinned ? "#ffc107" : "#555";
             const pinClass = item.pinned ? "pinned" : "";
@@ -448,20 +529,17 @@
                     </div>
                     <div style="cursor:pointer; font-size:1.5em; color:${pinColor};" onclick="togglePin(${realIndex})">★</div>
                 </div>
-
                 <div class="data-label"><span>ID</span> <span style="font-size:0.8em; color:#555;">TAP TO COPY</span></div>
                 <div class="data-row" onclick="copyText('${item.id}')">
                     <span style="overflow:hidden; text-overflow:ellipsis;">${item.id}</span>
                     <span>📋</span>
                 </div>
-
                 <div class="data-label"><span>PASSWORD</span> <span style="font-size:0.8em; color:#555;">TAP TO COPY</span></div>
                 <div class="data-row" onclick="copyText('${item.pass}')">
                     <span class="masked-pass" id="pass-display-${realIndex}">●●●●●●●●</span>
                     <span style="display:none;" class="print-show">${item.pass}</span>
                     <span style="cursor:pointer;" onclick="event.stopPropagation(); togglePassVis(${realIndex}, '${item.pass}')">👁️</span>
                 </div>
-                
                 <div style="text-align:right; margin-top:5px;">
                     <span style="font-size:0.7em; color:#666; float:left; margin-top:5px;">${item.date}</span>
                     <button style="width:auto; padding:5px 10px; font-size:0.8em; background:none; border:1px solid #d9534f; color:#d9534f; margin:0;" onclick="deleteData(${realIndex})">DELETE</button>
@@ -470,17 +548,11 @@
             container.innerHTML += html;
         });
     }
-    
-    function loadDataAndRender() {
-        renderList();
-    }
 
-    /* --- タブ切り替え --- */
     function switchTab(tab) {
         currentTab = tab;
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
         document.getElementById('tab-' + tab).classList.add('active');
-
         const nameInput = document.getElementById('service-name');
         const idInput = document.getElementById('service-id');
         const actionBtns = document.getElementById('action-btns');
@@ -507,7 +579,6 @@
         renderList(); 
     }
 
-    /* --- その他機能 --- */
     function generatePassword() {
         const len = document.getElementById('pass-length').value;
         const chars = [
@@ -523,7 +594,7 @@
     }
 
     function updateIdList() {
-        const list = getDecryptedList();
+        const list = getList();
         const datalist = document.getElementById('id-history');
         const uniqueIds = new Set();
         list.forEach(item => { if(item.id) uniqueIds.add(item.id); });
@@ -536,48 +607,54 @@
     }
 
     function shareData() {
-        let list = getDecryptedList();
+        let list = getList();
         const filteredList = list.filter(item => {
-            const cat = item.category || 'web';
-            return cat === currentTab;
+            const cat = item.category || 'web'; return cat === currentTab;
         });
         if (filteredList.length === 0) { showModal("No Data in this category."); return; }
-
         let csvContent = "Category,Service,ID,Password,Date\n";
         filteredList.forEach(item => {
             csvContent += `${currentTab},${item.service},${item.id},${item.pass},${item.date}\n`;
         });
         const file = new File([csvContent], "passcard_" + currentTab + ".csv", { type: "text/csv" });
         if (navigator.canShare && navigator.canShare({ files: [file] })) {
-            navigator.share({ title: 'PassCard Backup', files: [file] }).catch(console.error);
+            navigator.share({ title: 'PassCard CSV', files: [file] }).catch(console.error);
         } else {
-            const link = document.createElement("a");
-            link.href = URL.createObjectURL(file);
-            link.download = "passcard_" + currentTab + ".csv";
-            link.click();
+            const a = document.createElement("a");
+            a.href = URL.createObjectURL(file);
+            a.download = "passcard_" + currentTab + ".csv";
+            a.click();
         }
     }
 
     function togglePin(index) {
-        let list = getDecryptedList();
+        let list = getList();
         list[index].pinned = !list[index].pinned;
-        saveListEncrypted(list);
-        renderList(list);
+        saveList(list);
+        renderList();
     }
 
     function togglePassVis(index, realPass) {
         const el = document.getElementById(`pass-display-${index}`);
         if (el.innerText.includes('●')) {
-            el.innerText = realPass;
-            el.classList.remove('masked-pass');
+            el.innerText = realPass; el.classList.remove('masked-pass');
         } else {
-            el.innerText = '●●●●●●●●';
-            el.classList.add('masked-pass');
+            el.innerText = '●●●●●●●●'; el.classList.add('masked-pass');
         }
     }
 
     function copyText(text) {
         navigator.clipboard.writeText(text).then(() => showToast("Copied!"));
+    }
+
+    function deleteData(index) {
+        showModal("Delete this card?", true, function(){
+            let list = getList();
+            list.splice(index, 1);
+            saveList(list);
+            renderList();
+            updateIdList();
+        });
     }
 
     function showModal(msg, isConfirm = false, yesCallback = null) {
@@ -586,7 +663,6 @@
         const btnsDiv = document.getElementById('modal-btns');
         msgDiv.innerHTML = msg.replace(/\n/g, '<br>');
         btnsDiv.innerHTML = "";
-
         if (isConfirm) {
             const btnYes = document.createElement('button');
             btnYes.className = 'btn-modal btn-modal-ok';
@@ -596,16 +672,12 @@
             btnNo.className = 'btn-modal btn-modal-cancel';
             btnNo.innerText = 'NO';
             btnNo.onclick = function() { overlay.style.display = 'none'; };
-            btnsDiv.appendChild(btnNo);
-            btnsDiv.appendChild(btnYes);
+            btnsDiv.appendChild(btnNo); btnsDiv.appendChild(btnYes);
         } else {
             const btnOk = document.createElement('button');
             btnOk.className = 'btn-modal btn-modal-ok';
             btnOk.innerText = 'OK';
-            btnOk.onclick = function() { 
-                overlay.style.display = 'none'; 
-                if(yesCallback) yesCallback();
-            };
+            btnOk.onclick = function() { overlay.style.display = 'none'; if(yesCallback) yesCallback(); };
             btnsDiv.appendChild(btnOk);
         }
         overlay.style.display = 'flex';
@@ -613,31 +685,11 @@
 
     function showToast(msg) {
         const x = document.getElementById("toast");
-        x.innerText = msg;
-        x.className = "show";
+        x.innerText = msg; x.className = "show";
         setTimeout(() => x.className = x.className.replace("show", ""), 2000);
     }
-    
-    function deleteData(index) {
-        showModal("Delete this card?", true, function(){
-            let list = getDecryptedList();
-            list.splice(index, 1);
-            saveListEncrypted(list);
-            renderList(list);
-            updateIdList();
-        });
-    }
-
-    /* 印刷時の処理 */
-    window.onbeforeprint = function() {
-        document.querySelectorAll('.masked-pass').forEach(e => e.style.display = 'none');
-        document.querySelectorAll('.print-show').forEach(e => e.style.display = 'inline');
-    };
-    window.onafterprint = function() {
-        document.querySelectorAll('.masked-pass').forEach(e => e.style.display = 'block');
-        document.querySelectorAll('.print-show').forEach(e => e.style.display = 'none');
-    };
+    window.onbeforeprint = function() { document.querySelectorAll('.masked-pass').forEach(e => e.style.display = 'none'); document.querySelectorAll('.print-show').forEach(e => e.style.display = 'inline'); };
+    window.onafterprint = function() { document.querySelectorAll('.masked-pass').forEach(e => e.style.display = 'block'); document.querySelectorAll('.print-show').forEach(e => e.style.display = 'none'); };
 </script>
-
 </body>
 </html>
