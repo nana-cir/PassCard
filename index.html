@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>PassCard Metal V7</title>
+<title>PassCard Metal V7.1</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 <style>
     /* --- 基本設定 --- */
@@ -82,6 +82,7 @@
     .btn-gen { background: linear-gradient(to right, #007bff, #0056b3); }
     .btn-save { background: linear-gradient(to right, #28a745, #1e7e34); }
     .btn-backup { background: linear-gradient(to right, #d35400, #e67e22); }
+    .btn-restore { background: #444; border: 1px solid #666; color: #aaa; margin-top: 10px; font-size: 0.9em; }
     .btn-sub { 
         background: #444; border: 1px solid #666; font-size: 0.85em; padding: 10px; 
         display: flex; align-items: center; justify-content: center; gap: 5px; margin: 0;
@@ -144,7 +145,7 @@
     .btn-modal-ok { background: #007bff; color: white; border: none; }
     .btn-modal-cancel { background: #444; color: #ddd; border: 1px solid #666; }
 
-    /* --- ヘルプモーダル (新規) --- */
+    /* --- ヘルプモーダル --- */
     #help-modal-overlay {
         display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
         background: rgba(0,0,0,0.9); z-index: 9999;
@@ -168,10 +169,11 @@
     #toast.show { visibility: visible; opacity: 1; }
 
     #restore-file { display: none; }
+    #restore-file-inapp { display: none; }
 
     @media print {
         body { background: white; color: black; padding: 0; }
-        .card, .btn-gen, .btn-save, .action-buttons, .pin-icon, .btn-del, header, .options, #toast, .no-print, .tab-container, .warning-box, .btn-backup, .app-header { display: none !important; }
+        .card, .btn-gen, .btn-save, .action-buttons, .pin-icon, .btn-del, header, .options, #toast, .no-print, .tab-container, .warning-box, .btn-backup, .app-header, .btn-restore { display: none !important; }
         .item-card { border: 1px solid #ccc; background: white; color: black; box-shadow: none; break-inside: avoid; margin-bottom: 10px; }
         .data-row { background: #eee; border: 1px solid #ddd; color: black; }
         .logo-circle { background: #333; color: white !important; -webkit-print-color-adjust: exact; }
@@ -209,7 +211,7 @@
         <div class="help-section">
             <div class="help-h">復元方法</div>
             <div class="help-p">
-                初期設定画面の「バックアップから復元」ボタンから、保存したJSONファイルを読み込んでください。<br>
+                <strong>初期設定画面</strong> または <strong>アプリ内の復元ボタン</strong> から、保存したJSONファイルを読み込んでください。<br>
                 保存時のパスワードで開けるようになります。
             </div>
         </div>
@@ -222,7 +224,7 @@
 <div id="lock-screen">
     <div style="text-align:center; width: 100%; max-width: 350px;">
         <h2 style="color:#fff; font-size:2em; margin-bottom:10px;">PassCard</h2>
-        <p style="color:#777; margin-bottom: 20px;">Metal V7</p>
+        <p style="color:#777; margin-bottom: 20px;">Metal V7.1</p>
         
         <div id="setup-mode" style="display:none;">
             <h3 style="color:#007bff; margin-bottom:15px; border-bottom:1px solid #333; padding-bottom:10px;">マスターパスワード設定</h3>
@@ -332,9 +334,11 @@
         <button onclick="window.print()" class="btn-sub"><span style="font-size:1.2em">🖨️</span> 印刷 / PDF</button>
     </div>
     
-    <button onclick="downloadBackup()" class="btn-backup" style="margin-bottom:20px;">💾 JSONバックアップ保存 (暗号化済)</button>
+    <button onclick="downloadBackup()" class="btn-backup">💾 JSONバックアップ保存 (暗号化済)</button>
+    <button onclick="document.getElementById('restore-file-inapp').click()" class="btn-restore">📂 バックアップ読み込み（復元）</button>
+    <input type="file" id="restore-file-inapp" accept=".json" onchange="restoreFromFile(this)">
 
-    <div id="list-container"></div>
+    <div id="list-container" style="margin-top:20px;"></div>
 </div>
 
 <script>
@@ -438,7 +442,6 @@
         const jsonStr = JSON.stringify(dump);
         const file = new File([jsonStr], "passcard_metal_backup.json", {type: "application/json"});
 
-        // スマホでシェア機能が使える場合
         if (navigator.canShare && navigator.canShare({ files: [file] })) {
             try {
                 await navigator.share({
@@ -447,13 +450,10 @@
                     text: 'PassCardのバックアップファイルです。大切に保管してください。'
                 });
             } catch (error) {
-                console.log('Share failed', error);
-                // シェア失敗時は通常ダウンロード
                 const url = URL.createObjectURL(file);
                 const a = document.createElement('a'); a.href = url; a.download = "passcard_metal_backup.json"; a.click();
             }
         } else {
-            // PC等の場合
             const url = URL.createObjectURL(file);
             const a = document.createElement('a'); a.href = url; a.download = "passcard_metal_backup.json"; a.click();
             showModal("バックアップファイルを保存しました。\n大切に保管してください。");
