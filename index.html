@@ -3,39 +3,42 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-<title>PassCard Metal V4</title>
+<title>PassCard Metal V5 (AES)</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/4.1.1/crypto-js.min.js"></script>
 <style>
     /* --- 基本設定 --- */
     body {
         font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
-        background-color: #121212; /* Deep Black */
-        color: #e0e0e0;
-        margin: 0; padding: 20px 10px;
-        box-sizing: border-box; overflow-x: hidden; padding-bottom: 80px;
+        background-color: #121212; color: #e0e0e0;
+        margin: 0; padding: 20px 10px; box-sizing: border-box; 
+        overflow-x: hidden; padding-bottom: 80px;
     }
-
     h2, h3 { margin: 0; font-weight: 700; letter-spacing: 0.05em; }
 
     /* --- コンテナ --- */
     .container { max-width: 500px; margin: 0 auto; width: 100%; }
 
-    /* --- タブデザイン --- */
+    /* --- 警告エリア (データ消失リスク) --- */
+    .warning-box {
+        background: rgba(217, 83, 79, 0.15); border: 1px solid #d9534f;
+        color: #ffadad; padding: 15px; border-radius: 8px; font-size: 0.85em;
+        margin-bottom: 20px; line-height: 1.5;
+    }
+    .warning-title { color: #d9534f; font-weight: bold; display: flex; align-items: center; gap: 5px; margin-bottom: 5px; }
+
+    /* --- タブ --- */
     .tab-container {
         display: flex; gap: 10px; margin-bottom: 20px;
-        background: #222; padding: 5px; border-radius: 12px;
-        border: 1px solid #444;
+        background: #222; padding: 5px; border-radius: 12px; border: 1px solid #444;
     }
     .tab-btn {
         flex: 1; padding: 12px; border: none; background: transparent;
         color: #888; font-weight: bold; border-radius: 8px;
         cursor: pointer; transition: 0.3s; font-size: 0.9em;
     }
-    .tab-btn.active {
-        background: #007bff; color: white;
-        box-shadow: 0 4px 10px rgba(0,123,255,0.4);
-    }
+    .tab-btn.active { background: #007bff; color: white; box-shadow: 0 4px 10px rgba(0,123,255,0.4); }
 
-    /* --- メタルカード --- */
+    /* --- カード --- */
     .card {
         background: linear-gradient(135deg, #3a3a3a, #222);
         border: 1px solid #555; border-top: 1px solid #777;
@@ -43,43 +46,34 @@
         box-shadow: 0 10px 20px rgba(0,0,0,0.5);
     }
 
-    /* --- 入力フォーム --- */
+    /* --- フォーム --- */
     .input-group { margin-bottom: 15px; }
-    
-    label { 
-        display: flex; justify-content: space-between;
-        margin-bottom: 6px; font-size: 0.85em; color: #ccc; font-weight: bold;
-    }
+    label { display: flex; justify-content: space-between; margin-bottom: 6px; font-size: 0.85em; color: #ccc; font-weight: bold; }
     label span.en { font-weight: normal; color: #777; font-size: 0.9em; }
 
     input[type="text"], input[type="password"], input[type="number"] {
-        width: 100%; padding: 12px;
-        background: #f0f0f0; color: #111;
-        border: 2px solid #ccc; border-radius: 6px;
-        font-size: 1em; font-weight: 500;
+        width: 100%; padding: 12px; background: #f0f0f0; color: #111;
+        border: 2px solid #ccc; border-radius: 6px; font-size: 1em; font-weight: 500;
         box-sizing: border-box; outline: none; appearance: none;
     }
     input:focus { border-color: #007bff; background: #fff; }
 
-    /* --- オプションエリア --- */
+    /* --- オプション --- */
     .options {
-        display: flex; flex-wrap: wrap; gap: 12px;
-        margin-bottom: 20px; padding: 10px;
+        display: flex; flex-wrap: wrap; gap: 12px; margin-bottom: 20px; padding: 10px;
         background: rgba(0,0,0,0.2); border-radius: 8px;
     }
     .options label { color: #ddd; font-size: 0.9em; display: flex; align-items: center; margin: 0; cursor: pointer; }
     input[type="checkbox"] { transform: scale(1.2); margin-right: 8px; }
 
-    /* --- ボタン類 --- */
+    /* --- ボタン --- */
     button {
         cursor: pointer; padding: 15px; border: none; border-radius: 8px;
-        font-weight: bold; font-size: 1em; width: 100%;
-        margin-bottom: 12px; color: white;
+        font-weight: bold; font-size: 1em; width: 100%; margin-bottom: 12px; color: white;
         text-transform: uppercase; letter-spacing: 1px;
         box-shadow: 0 4px 6px rgba(0,0,0,0.3); transition: transform 0.1s;
     }
     button:active { transform: scale(0.97); }
-
     .btn-gen { background: linear-gradient(to right, #007bff, #0056b3); }
     .btn-save { background: linear-gradient(to right, #28a745, #1e7e34); }
     
@@ -89,14 +83,14 @@
         display: flex; align-items: center; justify-content: center; gap: 5px; margin: 0;
     }
 
-    /* --- リスト表示 --- */
+    /* --- リスト --- */
     .item-card {
         background: #252525; border-left: 5px solid #007bff;
         border-radius: 8px; padding: 15px; margin-bottom: 15px;
         position: relative; box-shadow: 0 4px 8px rgba(0,0,0,0.3);
     }
     .item-card.pinned { border-left-color: #ffc107; background: #2b2b24; }
-    .item-card.others { border-left-color: #6f42c1; } 
+    .item-card.others { border-left-color: #6f42c1; }
 
     .item-header { display: flex; align-items: center; margin-bottom: 12px; justify-content: space-between; }
     .logo-circle {
@@ -122,19 +116,14 @@
         display: flex; flex-direction: column; justify-content: center; align-items: center;
         padding: 20px; box-sizing: border-box; overflow-y: auto;
     }
-    .lock-input {
-        text-align:center; letter-spacing: 2px; margin-bottom: 15px; 
-        background:#333 !important; color:white !important; border:none !important;
-    }
+    .lock-input { text-align:center; letter-spacing: 2px; margin-bottom: 15px; background:#333 !important; color:white !important; border:none !important; }
     .lock-msg {
         color: #aaa; font-size: 0.9em; margin-bottom: 20px; line-height: 1.6; text-align: left;
         background: rgba(255,255,255,0.05); padding: 15px; border-radius: 8px; border-left: 3px solid #d9534f;
     }
-    .rule-list {
-        font-size: 0.8em; color: #888; text-align: left; margin-bottom: 20px; padding-left: 20px;
-    }
+    .rule-list { font-size: 0.8em; color: #888; text-align: left; margin-bottom: 20px; padding-left: 20px; }
 
-    /* --- モーダル --- */
+    /* --- モーダル & トースト --- */
     #custom-modal-overlay {
         display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
         background: rgba(0,0,0,0.8); z-index: 10000;
@@ -151,7 +140,6 @@
     .btn-modal-ok { background: #007bff; color: white; border: none; }
     .btn-modal-cancel { background: #444; color: #ddd; border: 1px solid #666; }
 
-    /* トースト */
     #toast {
         visibility: hidden; min-width: 200px; background-color: #333; color: #fff;
         text-align: center; border-radius: 50px; padding: 12px 20px;
@@ -160,17 +148,15 @@
     }
     #toast.show { visibility: visible; opacity: 1; }
 
-    /* 印刷 */
     @media print {
         body { background: white; color: black; padding: 0; }
-        .card, .btn-gen, .btn-save, .action-buttons, .pin-icon, .btn-del, header, .options, #toast, .no-print, .tab-container { display: none !important; }
+        .card, .btn-gen, .btn-save, .action-buttons, .pin-icon, .btn-del, header, .options, #toast, .no-print, .tab-container, .warning-box { display: none !important; }
         .item-card { border: 1px solid #ccc; background: white; color: black; box-shadow: none; break-inside: avoid; margin-bottom: 10px; }
         .data-row { background: #eee; border: 1px solid #ddd; color: black; }
         .logo-circle { background: #333; color: white !important; -webkit-print-color-adjust: exact; }
         .masked-pass { display: none !important; }
         .print-show { display: inline !important; }
     }
-
 </style>
 </head>
 <body>
@@ -187,29 +173,29 @@
 <div id="lock-screen">
     <div style="text-align:center; width: 100%; max-width: 350px;">
         <h2 style="color:#fff; font-size:2em; margin-bottom:10px;">PassCard</h2>
-        <p style="color:#777; margin-bottom: 20px;">Metal Edition V4</p>
+        <p style="color:#777; margin-bottom: 20px;">Metal Edition V5 (AES)</p>
         
         <div id="setup-mode" style="display:none;">
             <h3 style="color:#007bff; margin-bottom:15px; border-bottom:1px solid #333; padding-bottom:10px;">マスターパスワード設定</h3>
             <div class="lock-msg">
-                ⚠️ <strong>このパスワードは保存されません。</strong><br>
-                紛失すると、データは全てリセット（消去）されます。<br>
-                必ずご自身でメモを取り、保管してください。
+                ⚠️ <strong>【重要】セキュリティについて</strong><br>
+                データはあなたのパスワードで<strong>暗号化</strong>されます。<br>
+                パスワードを紛失すると、データは数学的に復元不可能になります。
             </div>
             <ul class="rule-list">
-                <li>文字数：8文字以上、16文字以内</li>
-                <li>条件：大文字、小文字、数字、記号を各1文字以上</li>
+                <li>8〜16文字</li>
+                <li>大文字・小文字・数字・記号 を各1文字以上</li>
             </ul>
             <input type="password" id="new-master-pass" placeholder="パスワードを入力" class="lock-input">
-            <button onclick="setMasterPass()" style="background:#007bff;">設定して開始</button>
+            <button onclick="setMasterPass()" style="background:#007bff;">設定して暗号化開始</button>
         </div>
 
         <div id="unlock-mode" style="display:none;">
             <p style="color:#aaa; font-size:0.9em;">マスターパスワードを入力</p>
             <input type="password" id="input-master-pass" placeholder="Password" class="lock-input">
-            <button onclick="unlockApp()" style="background:#444;">UNLOCK</button>
+            <button onclick="unlockApp()" style="background:#444;">UNLOCK (Decrypt)</button>
             <p style="margin-top:40px; color:#d9534f; font-size:0.8em; text-decoration:underline; cursor:pointer;" onclick="resetApp()">
-                パスワードを忘れましたか？<br>(全データを削除してリセット)
+                パスワードを忘れましたか？<br>(リセット)
             </p>
         </div>
     </div>
@@ -217,6 +203,13 @@
 
 <div id="app-screen" class="container" style="display:none;">
     
+    <div class="warning-box">
+        <div class="warning-title">⚠️ データ消失注意</div>
+        このデータはブラウザ内に保存されています。<br>
+        「履歴の削除」等を行うとデータが消えます。<br>
+        定期的に下の <strong>[Export]</strong> ボタンでバックアップを取ってください。
+    </div>
+
     <div class="tab-container">
         <button class="tab-btn active" id="tab-web" onclick="switchTab('web')">Websites</button>
         <button class="tab-btn" id="tab-app" onclick="switchTab('app')">Apps</button>
@@ -237,7 +230,7 @@
             <datalist id="id-history"></datalist>
         </div>
 
-        <label>OPTIONS <span class="en">生成設定 (手入力も可)</span></label>
+        <label>OPTIONS <span class="en">生成設定</span></label>
         <div class="options">
             <label><input type="checkbox" id="use-upper" checked> ABC</label>
             <label><input type="checkbox" id="use-lower" checked> abc</label>
@@ -251,12 +244,11 @@
         </div>
 
         <button onclick="generatePassword()" class="btn-gen">GENERATE PASSWORD</button>
-        
         <div class="input-group">
             <input type="text" id="generated-pass" placeholder="Generated Password" style="text-align:center; letter-spacing:1px; background:#fff; font-size:1.2em;">
         </div>
 
-        <button onclick="saveData()" class="btn-save">ADD TO LIST</button>
+        <button onclick="saveData()" class="btn-save">ADD TO LIST (Encrypt & Save)</button>
     </div>
 
     <h3 style="margin-bottom:15px; display:flex; justify-content:space-between; align-items:center;">
@@ -273,52 +265,127 @@
 </div>
 
 <script>
-    /* --- 1. グローバル変数 & 初期化 --- */
-    const MASTER_KEY = 'passCard_MasterKey'; 
-    const DATA_KEY = 'passCardData_v3';      
-    let currentTab = 'web'; 
+    /* === セキュリティ仕様 (Metal V5) ===
+       1. Master PasswordはSHA256ハッシュとして保存 (verify用)
+       2. データリスト(JSON)はMaster Password(平文)でAES暗号化して保存
+       3. メモリ上(tempKey)でのみ平文パスワードを保持し、リロードで消滅
+    */
+
+    const MASTER_HASH_KEY = 'passCard_MasterHash'; 
+    const ENCRYPTED_DATA_KEY = 'passCard_EncryptedData';      
+    let currentTab = 'web';
+    let tempKey = null; // 復号用の一時キー（リロードで消える）
 
     window.onload = function() {
+        // 暗号化ライブラリのチェック
+        if (typeof CryptoJS === 'undefined') {
+            alert("Error: Crypto-js library not loaded. Internet connection required.");
+            return;
+        }
         checkFirstRun();
-        updateIdList();
     };
 
-    /* --- 2. タブ切り替え --- */
-    function switchTab(tab) {
-        currentTab = tab;
-        
-        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
-        document.getElementById('tab-' + tab).classList.add('active');
-
-        const nameInput = document.getElementById('service-name');
-        const idInput = document.getElementById('service-id');
-        const actionBtns = document.getElementById('action-btns');
-
-        if (tab === 'web') {
-            document.getElementById('lbl-name').innerHTML = 'SERVICE NAME <span class="en">Webサイト名</span>';
-            nameInput.placeholder = "例: Amazon, Google...";
-            document.getElementById('lbl-id').innerHTML = 'ID / EMAIL <span class="en">ID / メール</span>';
-            idInput.placeholder = "email@example.com";
-            actionBtns.style.display = "grid"; 
-        } else if (tab === 'app') {
-            document.getElementById('lbl-name').innerHTML = 'APP NAME <span class="en">アプリ名</span>';
-            nameInput.placeholder = "例: LINE, Instagram...";
-            document.getElementById('lbl-id').innerHTML = 'ID / USERNAME <span class="en">ユーザー名</span>';
-            idInput.placeholder = "User ID";
-            actionBtns.style.display = "grid"; 
-        } else {
-            // Others
-            document.getElementById('lbl-name').innerHTML = 'DEVICE / ITEM <span class="en">機器名 / 項目</span>';
-            nameInput.placeholder = "例: 自宅Wi-Fi, ルーター, 社内PC...";
-            document.getElementById('lbl-id').innerHTML = 'ID / SSID <span class="en">ID / SSID</span>';
-            idInput.placeholder = "SSID / Login ID";
-            actionBtns.style.display = "none"; 
-        }
-
-        renderList(); 
+    /* --- 暗号化・ハッシュ化関連 --- */
+    function hashPassword(pass) {
+        return CryptoJS.SHA256(pass).toString();
     }
 
-    /* --- 3. データ保存 --- */
+    function encryptData(dataObject, key) {
+        const jsonStr = JSON.stringify(dataObject);
+        return CryptoJS.AES.encrypt(jsonStr, key).toString();
+    }
+
+    function decryptData(cipherText, key) {
+        try {
+            const bytes = CryptoJS.AES.decrypt(cipherText, key);
+            const decryptedStr = bytes.toString(CryptoJS.enc.Utf8);
+            if(!decryptedStr) return [];
+            return JSON.parse(decryptedStr);
+        } catch(e) {
+            console.error("Decrypt failed", e);
+            return [];
+        }
+    }
+
+    /* --- ロック画面 --- */
+    function checkFirstRun() {
+        const savedHash = localStorage.getItem(MASTER_HASH_KEY);
+        if (!savedHash) {
+            document.getElementById('setup-mode').style.display = 'block';
+            document.getElementById('unlock-mode').style.display = 'none';
+        } else {
+            document.getElementById('setup-mode').style.display = 'none';
+            document.getElementById('unlock-mode').style.display = 'block';
+        }
+    }
+
+    function setMasterPass() {
+        const val = document.getElementById('new-master-pass').value;
+        const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{}|;:,.<>?]).{8,16}$/;
+
+        if (!regex.test(val)) {
+            showModal("パスワード条件を満たしていません。\n8〜16文字、大文字・小文字・数字・記号を含めてください。");
+            return;
+        }
+        
+        showModal("このパスワードを設定しますか？\n" + val + "\n\n(重要：紛失すると復元不可)", true, function(){
+            // ハッシュ化して保存（検証用）
+            localStorage.setItem(MASTER_HASH_KEY, hashPassword(val));
+            // キーを一時保存
+            tempKey = val;
+            // 空のリストを暗号化して初期化
+            const emptyList = [];
+            localStorage.setItem(ENCRYPTED_DATA_KEY, encryptData(emptyList, tempKey));
+
+            showModal("暗号化設定完了！", false, function(){
+                 location.reload(); 
+            });
+        });
+    }
+
+    function unlockApp() {
+        const input = document.getElementById('input-master-pass').value;
+        const savedHash = localStorage.getItem(MASTER_HASH_KEY);
+        
+        // ハッシュで照合
+        if (hashPassword(input) === savedHash) {
+            tempKey = input; // 復号用にメモリに保持
+            document.getElementById('lock-screen').style.display = 'none';
+            document.getElementById('app-screen').style.display = 'block';
+            
+            loadDataAndRender(); // 復号して表示
+            updateIdList();
+        } else {
+            showModal("Wrong Password");
+            document.getElementById('input-master-pass').value = "";
+        }
+    }
+
+    function resetApp() {
+        showModal("【警告】\nリセットすると全てのデータが削除されます。\n本当によろしいですか？", true, function(){
+            showModal("【最終確認】\n実行しますか？", true, function(){
+                localStorage.removeItem(MASTER_HASH_KEY);
+                localStorage.removeItem(ENCRYPTED_DATA_KEY);
+                alert("リセットしました。");
+                location.reload();
+            });
+        });
+    }
+
+    /* --- データ操作 (常に暗号化/復号を伴う) --- */
+    function getDecryptedList() {
+        if (!tempKey) return [];
+        const cipherText = localStorage.getItem(ENCRYPTED_DATA_KEY);
+        if (!cipherText) return [];
+        return decryptData(cipherText, tempKey);
+    }
+
+    function saveListEncrypted(list) {
+        if (!tempKey) return;
+        const cipherText = encryptData(list, tempKey);
+        localStorage.setItem(ENCRYPTED_DATA_KEY, cipherText);
+    }
+
     function saveData() {
         const service = document.getElementById('service-name').value;
         const id = document.getElementById('service-id').value;
@@ -333,22 +400,23 @@
             category: currentTab 
         };
         
-        let list = JSON.parse(localStorage.getItem(DATA_KEY)) || [];
+        // 復号 -> 追加 -> 暗号化して保存
+        let list = getDecryptedList();
         list.push(newData);
-        localStorage.setItem(DATA_KEY, JSON.stringify(list));
+        saveListEncrypted(list);
         
         document.getElementById('service-name').value = "";
         document.getElementById('service-id').value = "";
         document.getElementById('generated-pass').value = "";
         
-        renderList();
+        renderList(list);
         updateIdList();
-        showModal("Saved to " + currentTab.toUpperCase() + "!");
+        showModal("Encrypted & Saved!");
     }
 
-    /* --- 4. リスト描画 --- */
-    function renderList() {
-        let list = JSON.parse(localStorage.getItem(DATA_KEY)) || [];
+    function renderList(list = null) {
+        if(!list) list = getDecryptedList();
+
         const container = document.getElementById('list-container');
         container.innerHTML = "";
 
@@ -365,7 +433,7 @@
         });
 
         filteredList.forEach((item) => {
-            const realIndex = list.indexOf(item);
+            const realIndex = list.indexOf(item); // 元リストでのインデックス
             const initial = item.service.charAt(0).toUpperCase() || "?";
             const pinColor = item.pinned ? "#ffc107" : "#555";
             const pinClass = item.pinned ? "pinned" : "";
@@ -402,60 +470,44 @@
             container.innerHTML += html;
         });
     }
+    
+    function loadDataAndRender() {
+        renderList();
+    }
 
-    /* --- 5. 共通機能 --- */
-    function checkFirstRun() {
-        const savedPass = localStorage.getItem(MASTER_KEY);
-        if (!savedPass) {
-            document.getElementById('setup-mode').style.display = 'block';
-            document.getElementById('unlock-mode').style.display = 'none';
+    /* --- タブ切り替え --- */
+    function switchTab(tab) {
+        currentTab = tab;
+        document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+        document.getElementById('tab-' + tab).classList.add('active');
+
+        const nameInput = document.getElementById('service-name');
+        const idInput = document.getElementById('service-id');
+        const actionBtns = document.getElementById('action-btns');
+
+        if (tab === 'web') {
+            document.getElementById('lbl-name').innerHTML = 'SERVICE NAME <span class="en">Webサイト名</span>';
+            nameInput.placeholder = "例: Amazon, Google...";
+            document.getElementById('lbl-id').innerHTML = 'ID / EMAIL <span class="en">ID / メール</span>';
+            idInput.placeholder = "email@example.com";
+            actionBtns.style.display = "grid"; 
+        } else if (tab === 'app') {
+            document.getElementById('lbl-name').innerHTML = 'APP NAME <span class="en">アプリ名</span>';
+            nameInput.placeholder = "例: LINE, Instagram...";
+            document.getElementById('lbl-id').innerHTML = 'ID / USERNAME <span class="en">ユーザー名</span>';
+            idInput.placeholder = "User ID";
+            actionBtns.style.display = "grid"; 
         } else {
-            document.getElementById('setup-mode').style.display = 'none';
-            document.getElementById('unlock-mode').style.display = 'block';
+            document.getElementById('lbl-name').innerHTML = 'DEVICE / ITEM <span class="en">機器名 / 項目</span>';
+            nameInput.placeholder = "例: 自宅Wi-Fi, ルーター, 社内PC...";
+            document.getElementById('lbl-id').innerHTML = 'ID / SSID <span class="en">ID / SSID</span>';
+            idInput.placeholder = "SSID / Login ID";
+            actionBtns.style.display = "none"; 
         }
+        renderList(); 
     }
 
-    function setMasterPass() {
-        const val = document.getElementById('new-master-pass').value;
-        const regex = /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[!@#$%^&*()_+\-=\[\]{}|;:,.<>?]).{8,16}$/;
-
-        if (!regex.test(val)) {
-            showModal("パスワードの条件を満たしていません。\n\n・8〜16文字\n・大文字、小文字、数字、記号\n\nをそれぞれ1文字以上含めてください。");
-            return;
-        }
-        
-        showModal("このパスワードで設定しますか？\n" + val + "\n\n(重要：紛失すると復元できません)", true, function(){
-            localStorage.setItem(MASTER_KEY, val);
-            showModal("設定が完了しました！", false, function(){
-                 location.reload(); 
-            });
-        });
-    }
-
-    function unlockApp() {
-        const input = document.getElementById('input-master-pass').value;
-        const saved = localStorage.getItem(MASTER_KEY);
-        if (input === saved) {
-            document.getElementById('lock-screen').style.display = 'none';
-            document.getElementById('app-screen').style.display = 'block';
-            renderList(); 
-        } else {
-            showModal("Wrong Password");
-            document.getElementById('input-master-pass').value = "";
-        }
-    }
-
-    function resetApp() {
-        showModal("【警告】\nリセットすると全てのデータが削除されます。\n本当によろしいですか？", true, function(){
-            showModal("【最終確認】\n削除されたデータは二度と戻りません。\n実行しますか？", true, function(){
-                localStorage.removeItem(MASTER_KEY);
-                localStorage.removeItem(DATA_KEY);
-                alert("リセットしました。");
-                location.reload();
-            });
-        });
-    }
-
+    /* --- その他機能 --- */
     function generatePassword() {
         const len = document.getElementById('pass-length').value;
         const chars = [
@@ -464,21 +516,17 @@
             document.getElementById('use-number').checked ? "0123456789" : "",
             document.getElementById('use-symbol').checked ? "!@#$%^&*()_+-=[]{}|;:,.<>?" : ""
         ].join("");
-
         if (!chars) { showModal("Please select at least one character type."); return; }
         let password = "";
-        for (let i = 0; i < len; i++) {
-            password += chars[Math.floor(Math.random() * chars.length)];
-        }
+        for (let i = 0; i < len; i++) { password += chars[Math.floor(Math.random() * chars.length)]; }
         document.getElementById('generated-pass').value = password;
     }
 
     function updateIdList() {
-        const list = JSON.parse(localStorage.getItem(DATA_KEY)) || [];
+        const list = getDecryptedList();
         const datalist = document.getElementById('id-history');
         const uniqueIds = new Set();
         list.forEach(item => { if(item.id) uniqueIds.add(item.id); });
-
         datalist.innerHTML = "";
         uniqueIds.forEach(id => {
             const option = document.createElement('option');
@@ -488,19 +536,17 @@
     }
 
     function shareData() {
-        let list = JSON.parse(localStorage.getItem(DATA_KEY)) || [];
+        let list = getDecryptedList();
         const filteredList = list.filter(item => {
             const cat = item.category || 'web';
             return cat === currentTab;
         });
-
         if (filteredList.length === 0) { showModal("No Data in this category."); return; }
 
         let csvContent = "Category,Service,ID,Password,Date\n";
         filteredList.forEach(item => {
             csvContent += `${currentTab},${item.service},${item.id},${item.pass},${item.date}\n`;
         });
-
         const file = new File([csvContent], "passcard_" + currentTab + ".csv", { type: "text/csv" });
         if (navigator.canShare && navigator.canShare({ files: [file] })) {
             navigator.share({ title: 'PassCard Backup', files: [file] }).catch(console.error);
@@ -513,10 +559,10 @@
     }
 
     function togglePin(index) {
-        let list = JSON.parse(localStorage.getItem(DATA_KEY)) || [];
+        let list = getDecryptedList();
         list[index].pinned = !list[index].pinned;
-        localStorage.setItem(DATA_KEY, JSON.stringify(list));
-        renderList();
+        saveListEncrypted(list);
+        renderList(list);
     }
 
     function togglePassVis(index, realPass) {
@@ -534,7 +580,6 @@
         navigator.clipboard.writeText(text).then(() => showToast("Copied!"));
     }
 
-    /* --- 修正ポイント：OKボタンでもコールバックを呼ぶ --- */
     function showModal(msg, isConfirm = false, yesCallback = null) {
         const overlay = document.getElementById('custom-modal-overlay');
         const msgDiv = document.getElementById('modal-msg');
@@ -559,7 +604,7 @@
             btnOk.innerText = 'OK';
             btnOk.onclick = function() { 
                 overlay.style.display = 'none'; 
-                if(yesCallback) yesCallback(); // ここが修正箇所
+                if(yesCallback) yesCallback();
             };
             btnsDiv.appendChild(btnOk);
         }
@@ -575,15 +620,13 @@
     
     function deleteData(index) {
         showModal("Delete this card?", true, function(){
-            let list = JSON.parse(localStorage.getItem(DATA_KEY)) || [];
+            let list = getDecryptedList();
             list.splice(index, 1);
-            localStorage.setItem(DATA_KEY, JSON.stringify(list));
-            renderList();
+            saveListEncrypted(list);
+            renderList(list);
             updateIdList();
         });
     }
-
-    function loadData() { renderList(); }
 
     /* 印刷時の処理 */
     window.onbeforeprint = function() {
