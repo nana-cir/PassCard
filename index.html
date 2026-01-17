@@ -96,7 +96,7 @@
         position: relative; box-shadow: 0 4px 8px rgba(0,0,0,0.3);
     }
     .item-card.pinned { border-left-color: #ffc107; background: #2b2b24; }
-    .item-card.others { border-left-color: #6f42c1; } /* Othersは紫 */
+    .item-card.others { border-left-color: #6f42c1; } 
 
     .item-header { display: flex; align-items: center; margin-bottom: 12px; justify-content: space-between; }
     .logo-circle {
@@ -276,7 +276,7 @@
     /* --- 1. グローバル変数 & 初期化 --- */
     const MASTER_KEY = 'passCard_MasterKey'; 
     const DATA_KEY = 'passCardData_v3';      
-    let currentTab = 'web'; // web, app, other
+    let currentTab = 'web'; 
 
     window.onload = function() {
         checkFirstRun();
@@ -287,11 +287,9 @@
     function switchTab(tab) {
         currentTab = tab;
         
-        // ボタンの見た目変更
         document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
         document.getElementById('tab-' + tab).classList.add('active');
 
-        // プレースホルダーとラベルの変更
         const nameInput = document.getElementById('service-name');
         const idInput = document.getElementById('service-id');
         const actionBtns = document.getElementById('action-btns');
@@ -301,23 +299,23 @@
             nameInput.placeholder = "例: Amazon, Google...";
             document.getElementById('lbl-id').innerHTML = 'ID / EMAIL <span class="en">ID / メール</span>';
             idInput.placeholder = "email@example.com";
-            actionBtns.style.display = "grid"; // 印刷ボタン表示
+            actionBtns.style.display = "grid"; 
         } else if (tab === 'app') {
             document.getElementById('lbl-name').innerHTML = 'APP NAME <span class="en">アプリ名</span>';
             nameInput.placeholder = "例: LINE, Instagram...";
             document.getElementById('lbl-id').innerHTML = 'ID / USERNAME <span class="en">ユーザー名</span>';
             idInput.placeholder = "User ID";
-            actionBtns.style.display = "grid"; // 印刷ボタン表示
+            actionBtns.style.display = "grid"; 
         } else {
             // Others
             document.getElementById('lbl-name').innerHTML = 'DEVICE / ITEM <span class="en">機器名 / 項目</span>';
             nameInput.placeholder = "例: 自宅Wi-Fi, ルーター, 社内PC...";
             document.getElementById('lbl-id').innerHTML = 'ID / SSID <span class="en">ID / SSID</span>';
             idInput.placeholder = "SSID / Login ID";
-            actionBtns.style.display = "none"; // 印刷ボタン非表示
+            actionBtns.style.display = "none"; 
         }
 
-        renderList(); // リストを再描画してフィルタリング
+        renderList(); 
     }
 
     /* --- 3. データ保存 --- */
@@ -332,14 +330,13 @@
             service, id, pass, 
             date: new Date().toLocaleDateString('ja-JP'),
             pinned: false,
-            category: currentTab // カテゴリを保存
+            category: currentTab 
         };
         
         let list = JSON.parse(localStorage.getItem(DATA_KEY)) || [];
         list.push(newData);
         localStorage.setItem(DATA_KEY, JSON.stringify(list));
         
-        // クリア
         document.getElementById('service-name').value = "";
         document.getElementById('service-id').value = "";
         document.getElementById('generated-pass').value = "";
@@ -349,13 +346,12 @@
         showModal("Saved to " + currentTab.toUpperCase() + "!");
     }
 
-    /* --- 4. リスト描画 (カテゴリフィルタ) --- */
+    /* --- 4. リスト描画 --- */
     function renderList() {
         let list = JSON.parse(localStorage.getItem(DATA_KEY)) || [];
         const container = document.getElementById('list-container');
         container.innerHTML = "";
 
-        // フィルタリング: カテゴリがない古いデータは 'web' として扱う
         const filteredList = list.filter(item => {
             const cat = item.category || 'web'; 
             return cat === currentTab;
@@ -363,21 +359,16 @@
 
         document.getElementById('count-badge').innerText = filteredList.length;
 
-        // ソート: ピン留め > 名前順
         filteredList.sort((a, b) => {
             if (a.pinned !== b.pinned) return a.pinned ? -1 : 1;
             return a.service.toLowerCase().localeCompare(b.service.toLowerCase());
         });
 
         filteredList.forEach((item) => {
-            // 全体リストの中でのインデックスを探す（削除・更新用）
             const realIndex = list.indexOf(item);
-
             const initial = item.service.charAt(0).toUpperCase() || "?";
             const pinColor = item.pinned ? "#ffc107" : "#555";
             const pinClass = item.pinned ? "pinned" : "";
-            
-            // Othersの場合は枠線の色などを変える（任意）
             const extraClass = currentTab === 'other' ? 'others' : '';
 
             const html = `
@@ -497,11 +488,6 @@
     }
 
     function shareData() {
-        // Othersカテゴリのデータもエクスポートして良いか？
-        // 印刷は禁止だがCSVはバックアップ用途として全データ出すのが一般的。
-        // ここでは「現在のタブ」のデータだけ出すようにするか、全データか選べるが、
-        // 利便性のため「表示中のカテゴリ」のみエクスポートする仕様にする。
-        
         let list = JSON.parse(localStorage.getItem(DATA_KEY)) || [];
         const filteredList = list.filter(item => {
             const cat = item.category || 'web';
@@ -548,6 +534,7 @@
         navigator.clipboard.writeText(text).then(() => showToast("Copied!"));
     }
 
+    /* --- 修正ポイント：OKボタンでもコールバックを呼ぶ --- */
     function showModal(msg, isConfirm = false, yesCallback = null) {
         const overlay = document.getElementById('custom-modal-overlay');
         const msgDiv = document.getElementById('modal-msg');
@@ -570,7 +557,10 @@
             const btnOk = document.createElement('button');
             btnOk.className = 'btn-modal btn-modal-ok';
             btnOk.innerText = 'OK';
-            btnOk.onclick = function() { overlay.style.display = 'none'; };
+            btnOk.onclick = function() { 
+                overlay.style.display = 'none'; 
+                if(yesCallback) yesCallback(); // ここが修正箇所
+            };
             btnsDiv.appendChild(btnOk);
         }
         overlay.style.display = 'flex';
